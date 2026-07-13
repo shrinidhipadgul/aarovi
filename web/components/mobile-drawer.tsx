@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
 
 const womenSubcategories = [
   { label: "Kurtis", href: "/shop/kurtis" },
@@ -23,9 +24,23 @@ interface MobileDrawerProps {
 
 export default function MobileDrawer({ open, onClose }: MobileDrawerProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
-  const isLoggedIn = false; // TODO(#8): replace with authClient.useSession()
+  const { data: session } = authClient.useSession();
+  const isLoggedIn = !!session;
+
+  const handleSignOut = useCallback(() => {
+    authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          onClose();
+          router.push("/");
+          router.refresh();
+        },
+      },
+    });
+  }, [onClose, router]);
 
   useEffect(() => {
     if (open) {
@@ -279,9 +294,7 @@ export default function MobileDrawer({ open, onClose }: MobileDrawerProps) {
                 </li>
                 <li>
                   <button
-                    onClick={() => {
-                      onClose();
-                    }}
+                    onClick={handleSignOut}
                     className="block w-full rounded-md px-3 py-2.5 text-left text-sm font-medium text-brand-text transition-colors hover:bg-brand-primary/5"
                   >
                     Sign Out
