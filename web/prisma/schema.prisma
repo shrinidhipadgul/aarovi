@@ -139,6 +139,12 @@ model WishlistItem {
   createdAt DateTime @default(now())
 }
 
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
+
 model ContactMessage {
   id        String   @id @default(cuid())
   name      String
