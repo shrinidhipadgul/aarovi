@@ -1,0 +1,65 @@
+import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/get-session";
+import { withErrorHandler } from "@/lib/with-error-handler";
+import {
+  successResponse,
+  errorResponse,
+  unauthorizedResponse,
+  notFoundResponse,
+} from "@/lib/api-response";
+
+export const POST = withErrorHandler(async (req: Request) => {
+  const session = await getSession();
+
+  if (!session?.user?.id) {
+    return unauthorizedResponse();
+  }
+
+  const { productId, size, quantity: rawQty } = await req.json();
+
+  if (!productId || typeof productId !== "string") {
+    return errorResponse("productId is required", 400);
+  }
+
+  if (!size || typeof size !== "string") {
+    return errorResponse("size is required", 400);
+  }
+
+  const quantity = Number(rawQty);
+  if (!Number.isInteger(quantity) || quantity < 1 || quantity > 10) {
+    return errorResponse("quantity must be an integer between 1 and 10", 400);
+  }
+
+  const product = await prisma.product.findUnique({
+    where: { id: productId },
+    select: { id: true, sizes: true },
+  });
+
+  if (!product) {
+    return notFoundResponse("Product");
+  }
+
+  if (!product.sizes.includes(size)) {
+    return errorResponse(`Size "${size}" is not available for this product`, 400);
+  }
+
+  const existing = await prisma.cartItem.findFirst({
+    where: { userId: session.user.id, productId, size },
+  });
+
+  const result = existing
+    ? await prisma.cartItem.update({
+        where: { id: existing.id },
+        data: { quantity: existing.quantity + quantity },
+      })
+    : await prisma.cartItem.create({
+        data: {
+          userId: session.user.id,
+          productId,
+          size,
+          quantity,
+        },
+      });
+
+  return successResponse({ cartItem: result }, 201);
+});

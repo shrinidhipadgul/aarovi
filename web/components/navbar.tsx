@@ -7,6 +7,7 @@ import MobileDrawer from "@/components/mobile-drawer";
 import SearchOverlay from "@/components/search-overlay";
 import { authClient } from "@/lib/auth-client";
 import { useWishlistCount, fetchWishlist, resetWishlist } from "@/lib/stores/wishlist";
+import { useCartCount, fetchCart, resetCart } from "@/lib/stores/cart";
 
 const womenSubcategories = [
   { label: "Kurtis", href: "/shop/kurtis" },
@@ -31,13 +32,14 @@ export default function Navbar() {
   const [accountOpen, setAccountOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
 
-  const cartCount = 0; // TODO(#34): replace with cart API count
+  const cartCount = useCartCount();
   const wishlistCount = useWishlistCount();
 
   const { data: session } = authClient.useSession();
   const loggedIn = !!session;
   const handleSignOut = () => {
     resetWishlist();
+    resetCart();
     authClient.signOut({
       fetchOptions: {
         onSuccess: () => {
@@ -58,6 +60,7 @@ export default function Navbar() {
   useEffect(() => {
     if (session) {
       fetchWishlist();
+      fetchCart();
     }
   }, [session]);
 

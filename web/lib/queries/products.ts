@@ -178,6 +178,66 @@ export async function fetchProducts(
   };
 }
 
+export type ProductDetailSelect = Prisma.ProductGetPayload<{
+  select: {
+    id: true;
+    name: true;
+    slug: true;
+    description: true;
+    price: true;
+    compareAt: true;
+    images: true;
+    category: true;
+    subCategory: true;
+    sizes: true;
+    inStock: true;
+    createdAt: true;
+  };
+}>;
+
+export async function fetchProductById(
+  id: string,
+): Promise<ProductDetailSelect | null> {
+  return prisma.product.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      description: true,
+      price: true,
+      compareAt: true,
+      images: true,
+      category: true,
+      subCategory: true,
+      sizes: true,
+      inStock: true,
+      createdAt: true,
+    },
+  });
+}
+
+export async function fetchRelatedProducts(
+  subCategory: string,
+  excludeId: string,
+): Promise<ProductCardSelect[]> {
+  return prisma.product.findMany({
+    where: { subCategory, id: { not: excludeId } },
+    take: 4,
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      price: true,
+      compareAt: true,
+      images: true,
+      sizes: true,
+      inStock: true,
+    },
+  });
+}
+
 export async function fetchAllCategories(): Promise<CategorySelect[]> {
   return prisma.category.findMany({
     select: { id: true, name: true, slug: true, gender: true },
