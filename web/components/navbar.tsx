@@ -4,6 +4,7 @@ import { useState, useEffect, startTransition } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import MobileDrawer from "@/components/mobile-drawer";
+import SearchOverlay from "@/components/search-overlay";
 
 const womenSubcategories = [
   { label: "Kurtis", href: "/shop/kurtis" },
@@ -25,6 +26,7 @@ export default function Navbar() {
     null,
   );
   const [accountOpen, setAccountOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const isLoggedIn = false; // TODO(#8): replace with authClient.useSession()
   const cartCount = 0; // TODO(#34): replace with cart API count
@@ -42,6 +44,7 @@ export default function Navbar() {
       setMobileOpen(false);
       setActiveDropdown(null);
       setAccountOpen(false);
+      setSearchOpen(false);
     });
   }, [pathname]);
 
@@ -164,9 +167,10 @@ export default function Navbar() {
         </ul>
 
         <div className="flex items-center gap-3 lg:gap-5">
-          <Link
-            href="/search"
+          <button
+            onClick={() => setSearchOpen(true)}
             className="text-brand-text transition-colors hover:text-brand-gold"
+            aria-label="Search"
           >
             <svg
               className="h-5 w-5"
@@ -181,7 +185,7 @@ export default function Navbar() {
                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
               />
             </svg>
-          </Link>
+          </button>
 
           <div className="relative">
             {isLoggedIn ? (
@@ -328,6 +332,10 @@ export default function Navbar() {
         </div>
       </nav>
 
+      <SearchOverlay
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+      />
       <MobileDrawer
         open={mobileOpen}
         onClose={() => setMobileOpen(false)}

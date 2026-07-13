@@ -7,6 +7,7 @@
   --color-brand-primary: #4F200D;
   --color-brand-gold: #AF8255;
   --color-brand-text: #2A1506;
+  --color-brand-dark: #1A0D04;
 }
 
 @theme inline {
@@ -16,8 +17,11 @@
   --color-brand-primary: #4F200D;
   --color-brand-gold: #AF8255;
   --color-brand-text: #2A1506;
+  --color-brand-dark: #1A0D04;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-cormorant-garamond);
+  --font-body: var(--font-montserrat);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -30,5 +34,5 @@
 body {
   background: var(--color-brand-bg);
   color: var(--color-brand-text);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body), sans-serif;
 }
