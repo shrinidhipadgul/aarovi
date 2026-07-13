@@ -10,7 +10,11 @@ const SORT_OPTIONS = [
   { value: "name_asc", label: "Name A-Z" },
 ];
 
-export default function SortDropdown() {
+interface SortDropdownProps {
+  basePath: string;
+}
+
+export default function SortDropdown({ basePath }: SortDropdownProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentSort = searchParams.get("sort") ?? "newest";
@@ -21,9 +25,9 @@ export default function SortDropdown() {
       params.delete("page");
       if (e.target.value === "newest") params.delete("sort");
       else params.set("sort", e.target.value);
-      router.push(`/shop/collection?${params.toString()}`);
+      router.push(`${basePath}?${params.toString()}`);
     },
-    [searchParams, router],
+    [searchParams, router, basePath],
   );
 
   return (

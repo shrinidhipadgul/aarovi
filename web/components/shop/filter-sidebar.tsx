@@ -6,10 +6,15 @@ import type { CategorySelect } from "@/lib/queries/products";
 
 interface FilterSidebarProps {
   categories: CategorySelect[];
+  basePath: string;
   onNavigate?: () => void;
 }
 
-export default function FilterSidebar({ categories, onNavigate }: FilterSidebarProps) {
+export default function FilterSidebar({
+  categories,
+  basePath,
+  onNavigate,
+}: FilterSidebarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -26,10 +31,10 @@ export default function FilterSidebar({ categories, onNavigate }: FilterSidebarP
       const params = new URLSearchParams(searchParams.toString());
       params.delete("page");
       updater(params);
-      router.push(`/shop/collection?${params.toString()}`);
+      router.push(`${basePath}?${params.toString()}`);
       onNavigate?.();
     },
-    [searchParams, router, onNavigate],
+    [searchParams, router, basePath, onNavigate],
   );
 
   const setGender = (value: string) => {

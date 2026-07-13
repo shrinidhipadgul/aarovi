@@ -7,7 +7,7 @@ import {
   type ProductCardSelect,
 } from "@/lib/queries/products";
 import type { PaginationMeta } from "@/lib/types";
-import CollectionClient from "./_components/collection-client";
+import ProductGridClient from "@/components/shop/product-grid-client";
 
 export const metadata: Metadata = {
   title: "Collection — Aarovi",
@@ -34,8 +34,9 @@ export default async function CollectionPage({
     sp.q ?? "",
     sp.gender ?? "",
     (Array.isArray(sp.category) ? sp.category.join(",") : sp.category) ?? "",
-    (Array.isArray(sp.subCategory) ? sp.subCategory.join(",") : sp.subCategory) ??
-      "",
+    (Array.isArray(sp.subCategory)
+      ? sp.subCategory.join(",")
+      : sp.subCategory) ?? "",
     sp.minPrice ?? "",
     sp.maxPrice ?? "",
     sp.inStock ?? "",
@@ -43,8 +44,10 @@ export default async function CollectionPage({
   ].join("|");
 
   return (
-    <CollectionClient
+    <ProductGridClient
       key={filterKey}
+      basePath="/shop/collection"
+      title="Collection"
       initialProducts={products as ProductCardSelect[]}
       initialPagination={pagination as PaginationMeta}
       categories={categories as CategorySelect[]}

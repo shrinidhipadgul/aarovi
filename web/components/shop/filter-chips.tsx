@@ -3,11 +3,12 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import type { CategorySelect } from "@/lib/queries/products";
 
-export default function FilterChips({
-  categories,
-}: {
+interface FilterChipsProps {
   categories?: CategorySelect[];
-}) {
+  basePath: string;
+}
+
+export default function FilterChips({ categories, basePath }: FilterChipsProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -17,7 +18,7 @@ export default function FilterChips({
     const params = new URLSearchParams(searchParams.toString());
     params.delete("page");
     params.delete(key);
-    router.push(`/shop/collection?${params.toString()}`);
+    router.push(`${basePath}?${params.toString()}`);
   };
 
   const gender = searchParams.get("gender");
@@ -42,7 +43,7 @@ export default function FilterChips({
           params.delete("page");
           if (parts.length > 0) params.set("category", parts.join(","));
           else params.delete("category");
-          router.push(`/shop/collection?${params.toString()}`);
+          router.push(`${basePath}?${params.toString()}`);
         },
       });
     });

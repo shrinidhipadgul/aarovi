@@ -9,20 +9,27 @@ import FilterChips from "./filter-chips";
 import type { CategorySelect, ProductCardSelect } from "@/lib/queries/products";
 import type { PaginationMeta } from "@/lib/types";
 
-interface CollectionClientProps {
+interface ProductGridClientProps {
+  basePath: string;
+  title: string;
   initialProducts: ProductCardSelect[];
   initialPagination: PaginationMeta;
   categories: CategorySelect[];
+  fixedParams?: Record<string, string>;
 }
 
-export default function CollectionClient({
+export default function ProductGridClient({
+  basePath,
+  title,
   initialProducts,
   initialPagination,
   categories,
-}: CollectionClientProps) {
+  fixedParams,
+}: ProductGridClientProps) {
   const searchParams = useSearchParams();
   const [products, setProducts] = useState<ProductCardSelect[]>(initialProducts);
-  const [pagination, setPagination] = useState<PaginationMeta>(initialPagination);
+  const [pagination, setPagination] =
+    useState<PaginationMeta>(initialPagination);
   const [currentPage, setCurrentPage] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -31,6 +38,9 @@ export default function CollectionClient({
     setLoadingMore(true);
     try {
       const params = new URLSearchParams(searchParams.toString());
+      for (const [key, value] of Object.entries(fixedParams ?? {})) {
+        params.set(key, value);
+      }
       params.set("page", String(currentPage + 1));
       const res = await fetch(`/api/products?${params.toString()}`);
       const json = await res.json();
@@ -42,13 +52,13 @@ export default function CollectionClient({
     } finally {
       setLoadingMore(false);
     }
-  }, [searchParams, currentPage]);
+  }, [searchParams, currentPage, fixedParams]);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <div className="mb-8">
         <h1 className="text-3xl font-semibold text-brand-primary sm:text-4xl">
-          Collection
+          {title}
         </h1>
         <p className="mt-2 text-sm text-brand-text/60">
           {pagination.total} {pagination.total === 1 ? "product" : "products"} found
@@ -56,7 +66,7 @@ export default function CollectionClient({
       </div>
 
       <Suspense>
-        <FilterChips categories={categories} />
+        <FilterChips categories={categories} basePath={basePath} />
       </Suspense>
 
       <div className="mt-4 flex items-center justify-between lg:mb-6">
@@ -64,13 +74,23 @@ export default function CollectionClient({
           onClick={() => setMobileFiltersOpen(true)}
           className="flex items-center gap-2 rounded-lg border border-brand-primary/15 bg-white px-4 py-2 text-sm font-medium text-brand-text transition-colors hover:border-brand-gold lg:hidden"
         >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 4h18M6 12h12M10 20h4" />
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M3 4h18M6 12h12M10 20h4"
+            />
           </svg>
           Filters
         </button>
         <div className="ml-auto">
-          <SortDropdown />
+          <SortDropdown basePath={basePath} />
         </div>
       </div>
 
@@ -78,7 +98,7 @@ export default function CollectionClient({
         <aside className="hidden w-60 shrink-0 lg:block">
           <div className="sticky top-24">
             <Suspense>
-              <FilterSidebar categories={categories} />
+              <FilterSidebar categories={categories} basePath={basePath} />
             </Suspense>
           </div>
         </aside>
@@ -124,20 +144,33 @@ export default function CollectionClient({
           />
           <div className="absolute left-0 top-0 h-full w-80 max-w-[85vw] overflow-y-auto bg-brand-bg p-5 shadow-xl">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-brand-primary">Filters</h2>
+              <h2 className="text-lg font-semibold text-brand-primary">
+                Filters
+              </h2>
               <button
                 onClick={() => setMobileFiltersOpen(false)}
                 className="text-brand-text/60 hover:text-brand-text"
                 aria-label="Close filters"
               >
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
             <Suspense>
               <FilterSidebar
                 categories={categories}
+                basePath={basePath}
                 onNavigate={() => setMobileFiltersOpen(false)}
               />
             </Suspense>
