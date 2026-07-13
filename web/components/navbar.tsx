@@ -3,6 +3,7 @@
 import { useState, useEffect, startTransition } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import MobileDrawer from "@/components/mobile-drawer";
 
 const womenSubcategories = [
   { label: "Kurtis", href: "/shop/kurtis" },
@@ -327,82 +328,10 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* TODO(#5): replace with Drawer Menu component */}
-      {mobileOpen && (
-        <div className="border-t border-brand-primary/10 bg-brand-bg px-4 pb-6 pt-4 lg:hidden">
-          <ul className="space-y-3">
-            <li>
-              <Link
-                href="/"
-                className="block text-sm font-medium uppercase tracking-wider text-brand-text transition-colors hover:text-brand-gold"
-              >
-                HOME
-              </Link>
-            </li>
-            {(["women", "men"] as const).map((key) => {
-              const subs =
-                key === "women" ? womenSubcategories : menSubcategories;
-              return (
-                <li key={key}>
-                  <details className="group">
-                    <summary className="flex cursor-pointer items-center gap-1 text-sm font-medium uppercase tracking-wider text-brand-text transition-colors hover:text-brand-gold">
-                      {key === "women" ? "WOMEN" : "MEN"}
-                      <svg
-                        className="h-3 w-3 transition-transform group-open:rotate-180"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
-                    </summary>
-                    <div className="ml-4 mt-2 space-y-2">
-                      {subs.map((sub) => (
-                        <Link
-                          key={sub.label}
-                          href={sub.href}
-                          className="block text-sm text-brand-text/80 transition-colors hover:text-brand-gold"
-                        >
-                          {sub.label}
-                        </Link>
-                      ))}
-                    </div>
-                  </details>
-                </li>
-              );
-            })}
-            <li>
-              <Link
-                href="/about"
-                className="block text-sm font-medium uppercase tracking-wider text-brand-text transition-colors hover:text-brand-gold"
-              >
-                ABOUT
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/customize"
-                className="block text-sm font-medium uppercase tracking-wider text-brand-text transition-colors hover:text-brand-gold"
-              >
-                CUSTOMIZE
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/contact"
-                className="block text-sm font-medium uppercase tracking-wider text-brand-text transition-colors hover:text-brand-gold"
-              >
-                CONTACT
-              </Link>
-            </li>
-          </ul>
-        </div>
-      )}
+      <MobileDrawer
+        open={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+      />
     </header>
   );
 }
