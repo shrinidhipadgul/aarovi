@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import MobileDrawer from "@/components/mobile-drawer";
 import SearchOverlay from "@/components/search-overlay";
 import { authClient } from "@/lib/auth-client";
+import { useWishlistCount, fetchWishlist, resetWishlist } from "@/lib/stores/wishlist";
 
 const womenSubcategories = [
   { label: "Kurtis", href: "/shop/kurtis" },
@@ -31,11 +32,12 @@ export default function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
 
   const cartCount = 0; // TODO(#34): replace with cart API count
-  const wishlistCount = 0; // TODO(#20): replace with wishlist API count
+  const wishlistCount = useWishlistCount();
 
   const { data: session } = authClient.useSession();
   const loggedIn = !!session;
   const handleSignOut = () => {
+    resetWishlist();
     authClient.signOut({
       fetchOptions: {
         onSuccess: () => {
@@ -52,6 +54,12 @@ export default function Navbar() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    if (session) {
+      fetchWishlist();
+    }
+  }, [session]);
 
   useEffect(() => {
     startTransition(() => {

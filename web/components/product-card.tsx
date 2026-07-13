@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useWishlistIds, toggleWishlist, usePendingToggle } from "@/lib/stores/wishlist";
 
 export interface ProductCardData {
   id: string;
@@ -21,13 +22,18 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const router = useRouter();
-  const [wishlisted, setWishlisted] = useState(false); // TODO(#20): init from wishlist API
   const [imgError, setImgError] = useState(false);
+  const wishlistIds = useWishlistIds();
+  const pending = usePendingToggle();
+  const wishlisted = wishlistIds.has(product.id);
 
-  const handleWishlist = (e: React.MouseEvent) => {
+  const handleWishlist = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    setWishlisted(!wishlisted);
-    // TODO(#20): call wishlist API to add/remove
+    if (pending === product.id) return;
+    const result = await toggleWishlist(product.id);
+    if (result === "unauthorized") {
+      router.push(`/sign-in?callbackURL=${encodeURIComponent(window.location.pathname)}`);
+    }
   };
 
   const handleClick = () => {
