@@ -3,11 +3,13 @@ import type { Metadata } from "next";
 import {
   fetchProductById,
   fetchRelatedProducts,
+  type ProductCardSelect,
 } from "@/lib/queries/products";
 import ProductCard from "@/components/product-card";
 import ProductGallery from "@/components/product-gallery";
 import ProductActions from "@/components/product-actions";
 import RecentlyViewedTracker from "@/components/recently-viewed-tracker";
+import RecentlyViewed from "@/components/recently-viewed";
 
 interface Props {
   params: Promise<{ productId: string }>;
@@ -35,6 +37,17 @@ export default async function ProductPage({ params }: Props) {
     notFound();
   }
 
+  const slim = {
+    id: product.id,
+    name: product.name,
+    slug: product.slug,
+    price: product.price,
+    compareAt: product.compareAt,
+    images: product.images,
+    sizes: product.sizes,
+    inStock: product.inStock,
+  };
+
   const related = await fetchRelatedProducts(
     product.subCategory,
     product.id,
@@ -42,7 +55,7 @@ export default async function ProductPage({ params }: Props) {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <RecentlyViewedTracker productId={productId} />
+      <RecentlyViewedTracker product={slim} />
 
       <div className="flex flex-col gap-10 lg:flex-row">
         <ProductGallery images={product.images} name={product.name} />
@@ -95,12 +108,14 @@ export default async function ProductPage({ params }: Props) {
             </h2>
           </div>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {related.map((p) => (
+            {related.map((p: ProductCardSelect) => (
               <ProductCard key={p.id} product={p} />
             ))}
           </div>
         </section>
       )}
+
+      <RecentlyViewed excludeId={product.id} />
     </div>
   );
 }
