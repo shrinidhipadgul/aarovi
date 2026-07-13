@@ -2,9 +2,10 @@
 
 import { useState, useEffect, startTransition } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import MobileDrawer from "@/components/mobile-drawer";
 import SearchOverlay from "@/components/search-overlay";
+import { authClient } from "@/lib/auth-client";
 
 const womenSubcategories = [
   { label: "Kurtis", href: "/shop/kurtis" },
@@ -20,6 +21,7 @@ const menSubcategories = [
 
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<"women" | "men" | null>(
@@ -28,9 +30,21 @@ export default function Navbar() {
   const [accountOpen, setAccountOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
 
-  const isLoggedIn = false; // TODO(#8): replace with authClient.useSession()
   const cartCount = 0; // TODO(#34): replace with cart API count
   const wishlistCount = 0; // TODO(#20): replace with wishlist API count
+
+  const { data: session } = authClient.useSession();
+  const loggedIn = !!session;
+  const handleSignOut = () => {
+    authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          router.push("/");
+          router.refresh();
+        },
+      },
+    });
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 0);
@@ -188,7 +202,7 @@ export default function Navbar() {
           </button>
 
           <div className="relative">
-            {isLoggedIn ? (
+            {loggedIn ? (
               <>
                 <button
                   onClick={() => setAccountOpen(!accountOpen)}
@@ -222,7 +236,10 @@ export default function Navbar() {
                     >
                       My Orders
                     </Link>
-                    <button className="block w-full rounded-md px-4 py-2 text-left text-sm text-brand-text transition-colors hover:bg-brand-bg">
+                    <button
+                      onClick={handleSignOut}
+                      className="block w-full rounded-md px-4 py-2 text-left text-sm text-brand-text transition-colors hover:bg-brand-bg"
+                    >
                       Sign Out
                     </button>
                   </div>
