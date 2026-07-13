@@ -17,7 +17,7 @@ export default function RecentlyViewed({ excludeId }: RecentlyViewedProps) {
   const products = useSyncExternalStore(
     subscribeToChanges,
     getRecentlyViewed,
-    () => [],
+    getRecentlyViewed,
   );
 
   const filtered = excludeId
