@@ -12,9 +12,24 @@ export const GET = withErrorHandler(async () => {
 
   const items = await prisma.wishlistItem.findMany({
     where: { userId: session.user.id },
-    select: { productId: true },
+    select: {
+      id: true,
+      productId: true,
+      product: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          price: true,
+          compareAt: true,
+          images: true,
+          sizes: true,
+          inStock: true,
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
   });
 
-  const ids = items.map((i) => i.productId);
-  return successResponse(ids);
+  return successResponse(items);
 });
