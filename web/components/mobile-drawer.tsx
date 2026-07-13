@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useStore } from "@nanostores/react";
 import { authClient } from "@/lib/auth-client";
 
 const womenSubcategories = [
@@ -28,7 +27,7 @@ export default function MobileDrawer({ open, onClose }: MobileDrawerProps) {
   const router = useRouter();
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
-  const { data: session } = useStore(authClient.useSession);
+  const { data: session } = authClient.useSession();
   const isLoggedIn = !!session;
 
   const handleSignOut = useCallback(() => {
