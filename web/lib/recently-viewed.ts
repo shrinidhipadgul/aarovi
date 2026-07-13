@@ -13,7 +13,8 @@ const STORAGE_KEY = "aarovi:recently-viewed";
 const MAX_ITEMS = 5;
 const CHANGE_EVENT = "aarovi:rv-change";
 
-let cached: RecentlyViewedProduct[] = [];
+const EMPTY: RecentlyViewedProduct[] = [];
+let cached: RecentlyViewedProduct[] = EMPTY;
 
 export function addToRecentlyViewed(product: RecentlyViewedProduct) {
   try {
@@ -31,15 +32,18 @@ export function addToRecentlyViewed(product: RecentlyViewedProduct) {
 }
 
 export function getRecentlyViewed(): RecentlyViewedProduct[] {
+  if (typeof window === "undefined") return cached;
   try {
-    if (typeof window === "undefined") return cached;
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      cached = [];
+      if (cached !== EMPTY) cached = EMPTY;
       return cached;
     }
     const parsed = JSON.parse(raw) as RecentlyViewedProduct[];
-    if (cached.length !== parsed.length || !cached.every((p, i) => p.id === parsed[i]?.id)) {
+    if (
+      cached.length !== parsed.length ||
+      !cached.every((p, i) => p.id === parsed[i]?.id)
+    ) {
       cached = parsed;
     }
     return cached;
@@ -51,7 +55,7 @@ export function getRecentlyViewed(): RecentlyViewedProduct[] {
 export function clearRecentlyViewed() {
   try {
     localStorage.removeItem(STORAGE_KEY);
-    cached = [];
+    cached = EMPTY;
     window.dispatchEvent(new Event(CHANGE_EVENT));
   } catch {
     /* localStorage not available */
