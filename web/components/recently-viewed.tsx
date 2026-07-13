@@ -1,11 +1,10 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 import ProductCard from "@/components/product-card";
 import {
   getRecentlyViewed,
   clearRecentlyViewed,
-  subscribeToChanges,
   type RecentlyViewedProduct,
 } from "@/lib/recently-viewed";
 
@@ -14,20 +13,24 @@ interface RecentlyViewedProps {
 }
 
 export default function RecentlyViewed({ excludeId }: RecentlyViewedProps) {
-  const products = useSyncExternalStore(
-    subscribeToChanges,
-    getRecentlyViewed,
-    getRecentlyViewed,
-  );
+  const [products, setProducts] = useState<RecentlyViewedProduct[]>([]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setProducts(getRecentlyViewed());
+    }, 0);
+    return () => clearTimeout(timer);
+  }, []);
 
   const filtered = excludeId
-    ? products.filter((p: RecentlyViewedProduct) => p.id !== excludeId)
+    ? products.filter((p) => p.id !== excludeId)
     : products;
 
   if (filtered.length === 0) return null;
 
   const handleClear = () => {
     clearRecentlyViewed();
+    setProducts([]);
   };
 
   return (
@@ -44,7 +47,7 @@ export default function RecentlyViewed({ excludeId }: RecentlyViewedProps) {
         </button>
       </div>
       <div className="flex gap-6 overflow-x-auto pb-2">
-        {filtered.map((product: RecentlyViewedProduct) => (
+        {filtered.map((product) => (
           <div key={product.id} className="min-w-[220px] w-[220px] shrink-0 sm:min-w-[240px] sm:w-[240px]">
             <ProductCard product={product} />
           </div>
