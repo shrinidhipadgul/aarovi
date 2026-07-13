@@ -7,6 +7,7 @@
   --color-brand-primary: #4F200D;
   --color-brand-gold: #AF8255;
   --color-brand-text: #2A1506;
+  --color-brand-dark: #1A0D04;
 }
 
 @theme inline {
@@ -16,6 +17,7 @@
   --color-brand-primary: #4F200D;
   --color-brand-gold: #AF8255;
   --color-brand-text: #2A1506;
+  --color-brand-dark: #1A0D04;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
