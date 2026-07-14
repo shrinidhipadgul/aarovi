@@ -276,7 +276,7 @@ export default function MobileDrawer({ open, onClose }: MobileDrawerProps) {
               <>
                 <li>
                   <Link
-                    href="/account/profile"
+                    href={`/profile/${session.user.id}`}
                     onClick={handleLinkClick}
                     className="block rounded-md px-3 py-2.5 text-sm font-medium text-brand-text transition-colors hover:bg-brand-primary/5"
                   >
@@ -285,7 +285,7 @@ export default function MobileDrawer({ open, onClose }: MobileDrawerProps) {
                 </li>
                 <li>
                   <Link
-                    href="/account/orders"
+                    href="/orders"
                     onClick={handleLinkClick}
                     className="block rounded-md px-3 py-2.5 text-sm font-medium text-brand-text transition-colors hover:bg-brand-primary/5"
                   >

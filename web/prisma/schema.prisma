@@ -15,6 +15,7 @@ model User {
   email         String          @unique
   emailVerified Boolean
   image         String?
+  phone         String?
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
   sessions      Session[]
@@ -151,7 +152,8 @@ model Address {
   city      String
   state     String
   pincode   String
-  createdAt DateTime @default(now())
+  isDefault Boolean   @default(false)
+  createdAt DateTime  @default(now())
 }
 
 model NewsletterSubscriber {

@@ -236,13 +236,13 @@ export default function Navbar() {
                 {accountOpen && (
                   <div className="absolute right-0 top-full mt-2 min-w-44 rounded-lg bg-white p-2 shadow-lg ring-1 ring-black/5">
                     <Link
-                      href="/account/profile"
+                      href={`/profile/${session.user.id}`}
                       className="block rounded-md px-4 py-2 text-sm text-brand-text transition-colors hover:bg-brand-bg"
                     >
                       My Profile
                     </Link>
                     <Link
-                      href="/account/orders"
+                      href="/orders"
                       className="block rounded-md px-4 py-2 text-sm text-brand-text transition-colors hover:bg-brand-bg"
                     >
                       My Orders
