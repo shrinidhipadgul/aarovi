@@ -8,16 +8,16 @@ const quickLinks = [
 ];
 
 const policies = [
-  { label: "Shipping Policy", href: "/shipping-policy" },
-  { label: "Return Policy", href: "/return-policy" },
-  { label: "Privacy Policy", href: "/privacy-policy" },
-  { label: "Terms & Conditions", href: "/terms" },
+  { label: "Shipping Policy", href: "/shippingpolicy" },
+  { label: "Return Policy", href: "/refundpolicy" },
+  { label: "Privacy Policy", href: "/privacypolicy" },
+  { label: "Terms & Conditions", href: "/termsconditions" },
 ];
 
 const support = [
   { label: "Get Help", href: "/support" },
   { label: "FAQs", href: "/faqs" },
-  { label: "My Orders", href: "/account/orders" },
+  { label: "My Orders", href: "/orders" },
 ];
 
 function SocialIcon({ href, label, children }: { href: string; label: string; children: React.ReactNode }) {
