@@ -65,6 +65,7 @@ interface SeedProduct {
   subCategory: string;
   sizes: string[];
   featured: boolean;
+  stock?: number;
 }
 
 const products: SeedProduct[] = [
@@ -369,6 +370,7 @@ const products: SeedProduct[] = [
 
 async function main() {
   console.log("Clearing existing data...");
+  await prisma.address.deleteMany();
   await prisma.wishlistItem.deleteMany();
   await prisma.cartItem.deleteMany();
   await prisma.orderItem.deleteMany();
@@ -390,7 +392,7 @@ async function main() {
     await prisma.product.upsert({
       where: { slug: p.slug },
       update: {},
-      create: p,
+      create: { ...p, stock: p.stock ?? 25 },
     });
   }
 
