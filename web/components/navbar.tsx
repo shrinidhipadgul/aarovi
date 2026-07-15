@@ -145,11 +145,8 @@ export default function Navbar() {
       }`}
     >
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 lg:px-8">
-        <Link
-          href="/"
-          className="text-xl font-bold tracking-[0.2em] text-brand-primary"
-        >
-          AAROVI
+        <Link href="/">
+          <img src="/logo.png" alt="AAROVI" className="h-12 w-auto" />
         </Link>
 
         <ul className="hidden items-center gap-8 lg:flex">

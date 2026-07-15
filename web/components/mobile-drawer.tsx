@@ -96,12 +96,8 @@ export default function MobileDrawer({ open, onClose }: MobileDrawerProps) {
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-brand-primary/10 px-5 py-4">
-          <Link
-            href="/"
-            onClick={handleLinkClick}
-            className="text-lg font-bold tracking-[0.2em] text-brand-primary"
-          >
-            AAROVI
+          <Link href="/" onClick={handleLinkClick}>
+            <img src="/logo.png" alt="AAROVI" className="h-10 w-auto" />
           </Link>
           <button
             onClick={onClose}
