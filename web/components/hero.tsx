@@ -40,7 +40,7 @@ export default function Hero() {
           <source src="/hero.mp4" type="video/mp4" />
         </video>
       </div>
-      <div className="absolute inset-0 bg-black/5" />
+      <div className="absolute inset-0 bg-black/20" />
       <motion.div
         initial="hidden"
         animate="visible"
@@ -63,7 +63,7 @@ export default function Hero() {
 
         <motion.p
           variants={childVariants}
-          className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-white/70 sm:text-lg md:text-xl"
+          className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-white sm:text-lg md:text-xl"
         >
           Handcrafted ethnic wear for life&apos;s every moment
         </motion.p>
