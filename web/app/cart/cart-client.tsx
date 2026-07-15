@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
@@ -12,19 +12,31 @@ import {
   removeFromCart,
   usePendingCart,
 } from "@/lib/stores/cart";
+import {
+  useLocalCartItems,
+  updateLocalCartQuantity,
+  removeFromLocalCart,
+} from "@/lib/stores/local-cart";
 import { calculateTotals } from "@/lib/checkout";
 
 const formatMoney = (n: number) =>
   `\u20B9${n.toLocaleString("en-IN")}`;
 
+const DEBOUNCE_MS = 300;
+
 export default function CartPage() {
   const router = useRouter();
   const { data: session } = authClient.useSession();
   const loggedIn = !!session;
-  const items = useCartItems();
+  const serverItems = useCartItems();
+  const localItems = useLocalCartItems();
   const loaded = useIsCartLoaded();
   const pending = usePendingCart();
   const [error, setError] = useState(false);
+  const debounceTimers = useRef<Map<string, NodeJS.Timeout>>(new Map());
+  const pendingUpdates = useRef<Map<string, number>>(new Map());
+
+  const items = loggedIn ? serverItems : localItems;
 
   useEffect(() => {
     if (loggedIn && !loaded) {
@@ -32,116 +44,122 @@ export default function CartPage() {
     }
   }, [loggedIn, loaded]);
 
-  const handleQuantity = async (
-    cartItemId: string,
+  useEffect(() => {
+    const timers = debounceTimers.current;
+    return () => {
+      timers.forEach((timer) => clearTimeout(timer));
+    };
+  }, []);
+
+  const debouncedUpdate = useCallback(
+    (id: string, qty: number) => {
+      pendingUpdates.current.set(id, qty);
+      const existing = debounceTimers.current.get(id);
+      if (existing) clearTimeout(existing);
+
+      debounceTimers.current.set(
+        id,
+        setTimeout(() => {
+          const finalQty = pendingUpdates.current.get(id);
+          pendingUpdates.current.delete(id);
+          if (finalQty === undefined) return;
+
+          if (loggedIn) {
+            updateCartQuantity(id, finalQty);
+          } else {
+            const item = localItems.find((i) => `${i.productId}:${i.size}` === id);
+            if (item) updateLocalCartQuantity(item.productId, item.size, finalQty);
+          }
+        }, DEBOUNCE_MS),
+      );
+    },
+    [loggedIn, localItems],
+  );
+
+  const handleQuantity = (
+    id: string,
     delta: number,
     currentQty: number,
   ) => {
     const next = currentQty + delta;
     if (next < 1) {
-      await removeFromCart(cartItemId);
+      debounceTimers.current.forEach((timer) => clearTimeout(timer));
+      debounceTimers.current.delete(id);
+      pendingUpdates.current.delete(id);
+      if (loggedIn) {
+        removeFromCart(id);
+      } else {
+        const item = localItems.find((i) => `${i.productId}:${i.size}` === id);
+        if (item) removeFromLocalCart(item.productId, item.size);
+      }
       return;
     }
-    await updateCartQuantity(cartItemId, next);
+    debouncedUpdate(id, next);
   };
 
-  const handleRemove = async (cartItemId: string) => {
-    const result = await removeFromCart(cartItemId);
-    if (result === "unauthorized") {
-      router.push("/sign-in");
+  const handleRemove = async (id: string) => {
+    debounceTimers.current.forEach((timer) => clearTimeout(timer));
+    debounceTimers.current.delete(id);
+    pendingUpdates.current.delete(id);
+    if (loggedIn) {
+      const result = await removeFromCart(id);
+      if (result === "unauthorized") {
+        router.push("/sign-in");
+      }
+    } else {
+      const item = localItems.find((i) => `${i.productId}:${i.size}` === id);
+      if (item) removeFromLocalCart(item.productId, item.size);
     }
   };
 
-  if (!loggedIn) {
-    return (
-      <div className="flex min-h-[50vh] flex-col items-center justify-center px-4 py-20 text-center">
-        <h1 className="text-3xl font-semibold text-brand-primary">Your Cart</h1>
-        <p className="mt-3 text-brand-text/60">
-          Sign in to view and manage your cart.
-        </p>
-        <Link
-          href="/sign-in"
-          className="mt-8 rounded-lg bg-brand-primary px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-primary/90"
-        >
-          Sign In
-        </Link>
-      </div>
-    );
+  if (!loggedIn && localItems.length === 0) {
+    return <CartEmpty />;
   }
 
-  if (error) {
-    return (
-      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-semibold text-brand-primary">Your Cart</h1>
-        <div className="mt-8 flex flex-col items-center justify-center rounded-xl border border-dashed border-red-200 py-20 text-center">
-          <p className="text-lg font-medium text-red-600">Could not load cart</p>
-          <p className="mt-2 text-sm text-brand-text/60">Something went wrong. Please try again.</p>
-          <button
-            onClick={() => { setError(false); fetchCart().catch(() => setError(true)); }}
-            className="mt-8 rounded-lg bg-brand-primary px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-primary/90"
-          >
-            Try Again
-          </button>
-        </div>
-      </div>
-    );
+  if (loggedIn && error) {
+    return <CartError onRetry={() => { setError(false); fetchCart().catch(() => setError(true)); }} />;
   }
 
-  if (!loaded) {
-    return (
-      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-        <div className="h-8 w-40 rounded bg-brand-primary/10" />
-        <div className="mt-8 space-y-4">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-4 rounded-xl border border-brand-primary/10 px-5 py-4">
-              <div className="h-20 w-16 flex-none rounded-lg bg-brand-primary/5" />
-              <div className="flex-1 space-y-2">
-                <div className="h-4 w-40 rounded bg-brand-primary/10" />
-                <div className="h-3 w-24 rounded bg-brand-primary/5" />
-                <div className="h-4 w-16 rounded bg-brand-primary/10" />
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="h-7 w-7 rounded bg-brand-primary/5" />
-                <div className="h-4 w-6 rounded bg-brand-primary/5" />
-                <div className="h-7 w-7 rounded bg-brand-primary/5" />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
+  if (loggedIn && !loaded) {
+    return <CartSkeleton />;
   }
 
   const totals = calculateTotals(
     items.map((item) => ({ price: item.product.price, quantity: item.quantity })),
   );
 
+  const getItemKey = (item: typeof items[number]): string => {
+    if ("id" in item && typeof (item as Record<string, unknown>).id === "string") {
+      return (item as Record<string, string>).id;
+    }
+    return `${item.productId}:${item.size}`;
+  };
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
       <h1 className="text-3xl font-semibold text-brand-primary">Your Cart</h1>
 
-      {items.length === 0 ? (
-        <div className="mt-8 flex flex-col items-center justify-center rounded-xl border border-dashed border-brand-primary/15 py-20 text-center">
-          <p className="text-lg font-medium text-brand-text">Your cart is empty</p>
-          <p className="mt-2 text-sm text-brand-text/60">
-            Add items to get started.
-          </p>
-          <Link
-            href="/shop/collection"
-            className="mt-8 rounded-lg bg-brand-primary px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-primary/90"
-          >
-            Start Shopping
-          </Link>
+      {!loggedIn && items.length > 0 && (
+        <div className="mt-4 rounded-lg bg-brand-gold/10 px-4 py-3 text-sm text-brand-gold">
+          <Link href="/sign-in" className="font-semibold underline underline-offset-2 hover:no-underline">
+            Sign in
+          </Link>{" "}
+          to save your cart and place your order.
         </div>
+      )}
+
+      {items.length === 0 ? (
+        <CartEmpty />
       ) : (
         <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_22rem]">
           <section>
             <ul className="divide-y divide-brand-primary/10 rounded-xl border border-brand-primary/10">
               {items.map((item) => {
                 const image = item.product.images?.[0];
+                const itemKey = getItemKey(item);
                 return (
                   <li
-                    key={item.id}
+                    key={itemKey}
                     className="flex items-center gap-4 px-5 py-4 sm:gap-6"
                   >
                     <div className="h-20 w-16 flex-none overflow-hidden rounded-lg border border-brand-primary/10 bg-brand-bg">
@@ -177,7 +195,7 @@ export default function CartPage() {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() =>
-                          handleQuantity(item.id, -1, item.quantity)
+                          handleQuantity(itemKey, -1, item.quantity)
                         }
                         disabled={pending}
                         className="flex h-7 w-7 items-center justify-center rounded border border-brand-primary/15 text-sm transition-colors hover:bg-brand-bg disabled:opacity-40"
@@ -190,7 +208,7 @@ export default function CartPage() {
                       </span>
                       <button
                         onClick={() =>
-                          handleQuantity(item.id, 1, item.quantity)
+                          handleQuantity(itemKey, 1, item.quantity)
                         }
                         disabled={pending}
                         className="flex h-7 w-7 items-center justify-center rounded border border-brand-primary/15 text-sm transition-colors hover:bg-brand-bg disabled:opacity-40"
@@ -205,7 +223,7 @@ export default function CartPage() {
                         {formatMoney(item.product.price * item.quantity)}
                       </p>
                       <button
-                        onClick={() => handleRemove(item.id)}
+                        onClick={() => handleRemove(itemKey)}
                         disabled={pending}
                         className="mt-1 text-xs text-red-400 transition-colors hover:text-red-600 disabled:opacity-40"
                       >
@@ -250,16 +268,79 @@ export default function CartPage() {
                 </div>
               </dl>
               <button
-                onClick={() => router.push("/place-order")}
+                onClick={() => router.push(loggedIn ? "/place-order" : "/sign-in")}
                 disabled={items.length === 0}
                 className="mt-6 w-full rounded-lg bg-brand-primary px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Place Order
+                {loggedIn ? "Place Order" : "Sign In to Order"}
               </button>
             </div>
           </aside>
         </div>
       )}
+    </div>
+  );
+}
+
+function CartEmpty() {
+  return (
+    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+      <h1 className="text-3xl font-semibold text-brand-primary">Your Cart</h1>
+      <div className="mt-8 flex flex-col items-center justify-center rounded-xl border border-dashed border-brand-primary/15 py-20 text-center">
+        <p className="text-lg font-medium text-brand-text">Your cart is empty</p>
+        <p className="mt-2 text-sm text-brand-text/60">
+          Add items to get started.
+        </p>
+        <Link
+          href="/shop/collection"
+          className="mt-8 rounded-lg bg-brand-primary px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-primary/90"
+        >
+          Start Shopping
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function CartError({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+      <h1 className="text-3xl font-semibold text-brand-primary">Your Cart</h1>
+      <div className="mt-8 flex flex-col items-center justify-center rounded-xl border border-dashed border-red-200 py-20 text-center">
+        <p className="text-lg font-medium text-red-600">Could not load cart</p>
+        <p className="mt-2 text-sm text-brand-text/60">Something went wrong. Please try again.</p>
+        <button
+          onClick={onRetry}
+          className="mt-8 rounded-lg bg-brand-primary px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-primary/90"
+        >
+          Try Again
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function CartSkeleton() {
+  return (
+    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+      <div className="h-8 w-40 rounded bg-brand-primary/10" />
+      <div className="mt-8 space-y-4">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-4 rounded-xl border border-brand-primary/10 px-5 py-4">
+            <div className="h-20 w-16 flex-none rounded-lg bg-brand-primary/5" />
+            <div className="flex-1 space-y-2">
+              <div className="h-4 w-40 rounded bg-brand-primary/10" />
+              <div className="h-3 w-24 rounded bg-brand-primary/5" />
+              <div className="h-4 w-16 rounded bg-brand-primary/10" />
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-7 w-7 rounded bg-brand-primary/5" />
+              <div className="h-4 w-6 rounded bg-brand-primary/5" />
+              <div className="h-7 w-7 rounded bg-brand-primary/5" />
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

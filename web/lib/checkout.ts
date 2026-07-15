@@ -1,6 +1,6 @@
 import { createHmac } from "node:crypto";
 
-export const DELIVERY_FEE = 49;
+export const DELIVERY_FEE = 50;
 export const FREE_DELIVERY_THRESHOLD = 999;
 
 export interface CheckoutItem {

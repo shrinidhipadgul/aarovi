@@ -32,7 +32,7 @@ export const POST = withErrorHandler(async (req: Request) => {
 
   const product = await prisma.product.findUnique({
     where: { id: productId },
-    select: { id: true, sizes: true },
+    select: { id: true, sizes: true, inStock: true, stock: true },
   });
 
   if (!product) {
@@ -43,14 +43,26 @@ export const POST = withErrorHandler(async (req: Request) => {
     return errorResponse(`Size "${size}" is not available for this product`, 400);
   }
 
+  if (!product.inStock || product.stock <= 0) {
+    return errorResponse("This product is currently out of stock", 400);
+  }
+
   const existing = await prisma.cartItem.findFirst({
     where: { userId: session.user.id, productId, size },
   });
 
+  const newQty = existing ? existing.quantity + quantity : quantity;
+  if (newQty > product.stock) {
+    return errorResponse(
+      `Only ${product.stock} unit${product.stock === 1 ? "" : "s"} available. You already have ${existing ? existing.quantity : 0} in your cart.`,
+      400,
+    );
+  }
+
   const result = existing
     ? await prisma.cartItem.update({
         where: { id: existing.id },
-        data: { quantity: existing.quantity + quantity },
+        data: { quantity: newQty },
       })
     : await prisma.cartItem.create({
         data: {

@@ -2,7 +2,11 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
 import { addToCart, usePendingCart } from "@/lib/stores/cart";
+import {
+  addToLocalCart,
+} from "@/lib/stores/local-cart";
 import {
   useWishlistIds,
   toggleWishlist,
@@ -32,8 +36,25 @@ export default function ProductActions({
   const wishlistPending = usePendingToggle();
   const wishlisted = wishlistIds.has(productId);
 
+  const { data: session } = authClient.useSession();
+  const loggedIn = !!session;
+
   const handleAddToCart = useCallback(async () => {
     if (!selectedSize || pending) return;
+
+    if (!loggedIn) {
+      addToLocalCart({
+        productId,
+        size: selectedSize,
+        quantity,
+        product: { id: productId, name: "", slug: "", price: 0, images: [] },
+      });
+      router.push(`/product/${productId}?added=1`);
+      setAddedMsg(true);
+      setTimeout(() => setAddedMsg(false), 2000);
+      return;
+    }
+
     const result = await addToCart(productId, selectedSize, quantity);
     if (result === "unauthorized") {
       router.push(
@@ -45,7 +66,7 @@ export default function ProductActions({
       setAddedMsg(true);
       setTimeout(() => setAddedMsg(false), 2000);
     }
-  }, [productId, selectedSize, quantity, pending, router]);
+  }, [productId, selectedSize, quantity, pending, router, loggedIn]);
 
   const handleWishlist = useCallback(async () => {
     if (wishlistPending === productId) return;

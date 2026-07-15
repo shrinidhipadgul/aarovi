@@ -8,6 +8,7 @@ import SearchOverlay from "@/components/search-overlay";
 import { authClient } from "@/lib/auth-client";
 import { useWishlistCount, fetchWishlist, resetWishlist } from "@/lib/stores/wishlist";
 import { useCartCount, fetchCart, resetCart } from "@/lib/stores/cart";
+import { useLocalCartCount } from "@/lib/stores/local-cart";
 
 const womenSubcategories = [
   { label: "Kurtis", href: "/shop/kurtis" },
@@ -32,11 +33,13 @@ export default function Navbar() {
   const [accountOpen, setAccountOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
 
-  const cartCount = useCartCount();
+  const serverCartCount = useCartCount();
+  const localCartCount = useLocalCartCount();
   const wishlistCount = useWishlistCount();
 
   const { data: session } = authClient.useSession();
   const loggedIn = !!session;
+  const cartCount = loggedIn ? serverCartCount : localCartCount;
   const handleSignOut = () => {
     resetWishlist();
     resetCart();

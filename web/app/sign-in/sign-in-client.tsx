@@ -4,6 +4,7 @@ import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
+import { clearLocalCart, localCartItems } from "@/lib/stores/local-cart";
 
 function SignInForm() {
   const router = useRouter();
@@ -44,6 +45,20 @@ function SignInForm() {
       setError(authError.message ?? authError.statusText ?? "Something went wrong");
       setLoading(false);
       return;
+    }
+
+    const localItems = localCartItems.get();
+    if (localItems.length > 0) {
+      try {
+        await fetch("/api/cart/merge", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ items: localItems }),
+        });
+        clearLocalCart();
+      } catch {
+        /* merge is best-effort */
+      }
     }
 
     router.push(callbackURL);
