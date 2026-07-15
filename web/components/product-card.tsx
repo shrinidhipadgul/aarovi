@@ -51,7 +51,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           handleClick();
         }
       }}
-      className="group cursor-pointer"
+      className="group cursor-pointer rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-gold"
     >
       {/* Image container */}
       <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-brand-bg">

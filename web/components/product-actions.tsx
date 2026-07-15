@@ -73,6 +73,7 @@ export default function ProductActions({
           <h3 className="text-sm font-semibold text-brand-text">Size</h3>
           <button
             onClick={() => setSizeChartOpen(true)}
+            aria-haspopup="dialog"
             className="text-xs font-medium text-brand-gold underline-offset-2 hover:underline"
           >
             Size Guide
@@ -86,6 +87,7 @@ export default function ProductActions({
                 key={s}
                 onClick={() => setSelectedSize(active ? null : s)}
                 disabled={!inStock}
+                aria-pressed={active}
                 className={`flex h-11 w-12 items-center justify-center rounded-lg border text-sm font-medium transition-all ${
                   active
                     ? "border-brand-primary bg-brand-primary text-white"

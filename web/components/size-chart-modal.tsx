@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useFocusTrap } from "@/lib/hooks/use-focus-trap";
 
 interface SizeChartModalProps {
   open: boolean;
@@ -28,6 +29,7 @@ const MEN_SIZES = [
 
 export default function SizeChartModal({ open, onClose }: SizeChartModalProps) {
   const [tab, setTab] = useState<Tab>("women");
+  const focusRef = useFocusTrap(open);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -57,6 +59,10 @@ export default function SizeChartModal({ open, onClose }: SizeChartModalProps) {
 
   return (
     <div
+      ref={focusRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Size guide"
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       onClick={onClose}
     >
@@ -85,10 +91,13 @@ export default function SizeChartModal({ open, onClose }: SizeChartModalProps) {
         </div>
 
         {/* Tabs */}
-        <div className="mb-4 flex gap-4 border-b border-brand-primary/10">
+        <div className="mb-4 border-b border-brand-primary/10" role="tablist" aria-label="Gender">
           {(["women", "men"] as Tab[]).map((t) => (
             <button
               key={t}
+              role="tab"
+              aria-selected={tab === t}
+              aria-controls={`size-chart-panel-${t}`}
               onClick={() => setTab(t)}
               className={`pb-2 text-sm font-medium capitalize transition-colors ${
                 tab === t
@@ -102,8 +111,13 @@ export default function SizeChartModal({ open, onClose }: SizeChartModalProps) {
         </div>
 
         {/* Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+        <div
+          id={`size-chart-panel-${tab}`}
+          role="tabpanel"
+          aria-labelledby={`size-chart-tab-${tab}`}
+          className="overflow-x-auto"
+        >
+          <table className="w-full text-sm" aria-label={`${tab} size chart`}>
             <thead>
               <tr className="border-b border-brand-primary/10">
                 {cols.map((col) => (

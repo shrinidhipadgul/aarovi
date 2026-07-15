@@ -69,6 +69,7 @@ export default function ProductGallery({ images, name }: ProductGalleryProps) {
                 setCurrentIndex(i);
                 setImgError(false);
               }}
+              aria-current={i === currentIndex ? "true" : undefined}
               className={`relative aspect-square w-16 shrink-0 overflow-hidden rounded-lg border-2 transition-colors ${
                 i === currentIndex
                   ? "border-brand-gold"

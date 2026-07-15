@@ -435,7 +435,7 @@ export default function PlaceOrderPage() {
             <h2 className="text-lg font-semibold text-brand-primary">
               Payment Method
             </h2>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div className="mt-4 grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Payment method">
               <PaymentOption
                 selected={paymentMethod === "COD"}
                 onClick={() => setPaymentMethod("COD")}
@@ -601,6 +601,8 @@ function PaymentOption({
   return (
     <button
       type="button"
+      role="radio"
+      aria-checked={selected}
       onClick={onClick}
       className={`rounded-lg border p-4 text-left transition-colors ${
         selected

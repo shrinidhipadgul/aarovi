@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
+import { useFocusTrap } from "@/lib/hooks/use-focus-trap";
 
 const womenSubcategories = [
   { label: "Kurtis", href: "/shop/kurtis" },
@@ -23,6 +24,7 @@ interface MobileDrawerProps {
 }
 
 export default function MobileDrawer({ open, onClose }: MobileDrawerProps) {
+  const drawerRef = useFocusTrap(open);
   const pathname = usePathname();
   const router = useRouter();
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -84,6 +86,7 @@ export default function MobileDrawer({ open, onClose }: MobileDrawerProps) {
 
       {/* Drawer panel */}
       <div
+        ref={drawerRef}
         className={`fixed inset-y-0 right-0 z-50 flex w-80 max-w-[85vw] flex-col bg-brand-bg shadow-xl transition-transform duration-300 ease-out lg:hidden ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
@@ -146,6 +149,8 @@ export default function MobileDrawer({ open, onClose }: MobileDrawerProps) {
             <li>
               <button
                 onClick={() => toggleExpanded("women")}
+                aria-expanded={expanded.has("women")}
+                aria-controls="mobile-women-panel"
                 className="flex w-full items-center justify-between rounded-md px-3 py-2.5 text-sm font-medium uppercase tracking-wider text-brand-text transition-colors hover:bg-brand-primary/5"
               >
                 Women
@@ -166,6 +171,9 @@ export default function MobileDrawer({ open, onClose }: MobileDrawerProps) {
                 </svg>
               </button>
               <div
+                id="mobile-women-panel"
+                role="region"
+                aria-labelledby="mobile-women-btn"
                 className={`overflow-hidden transition-all duration-200 ${
                   expanded.has("women")
                     ? "max-h-60 opacity-100"
@@ -191,6 +199,8 @@ export default function MobileDrawer({ open, onClose }: MobileDrawerProps) {
             <li>
               <button
                 onClick={() => toggleExpanded("men")}
+                aria-expanded={expanded.has("men")}
+                aria-controls="mobile-men-panel"
                 className="flex w-full items-center justify-between rounded-md px-3 py-2.5 text-sm font-medium uppercase tracking-wider text-brand-text transition-colors hover:bg-brand-primary/5"
               >
                 Men
@@ -211,6 +221,9 @@ export default function MobileDrawer({ open, onClose }: MobileDrawerProps) {
                 </svg>
               </button>
               <div
+                id="mobile-men-panel"
+                role="region"
+                aria-labelledby="mobile-men-btn"
                 className={`overflow-hidden transition-all duration-200 ${
                   expanded.has("men")
                     ? "max-h-60 opacity-100"

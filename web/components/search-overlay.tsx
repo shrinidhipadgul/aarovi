@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback, startTransition } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useFocusTrap } from "@/lib/hooks/use-focus-trap";
 
 interface SearchProduct {
   id: string;
@@ -25,6 +26,7 @@ const DEBOUNCE_MS = 300;
 export default function SearchOverlay({ open, onClose }: SearchOverlayProps) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
+  const overlayRef = useFocusTrap(open);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchProduct[]>([]);
   const [loading, setLoading] = useState(false);
@@ -144,6 +146,10 @@ export default function SearchOverlay({ open, onClose }: SearchOverlayProps) {
 
   return (
     <div
+      ref={overlayRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Search products"
       className={`fixed inset-0 z-[60] flex justify-center bg-black/60 px-4 pt-20 transition-opacity duration-300 ${
         open ? "opacity-100" : "pointer-events-none opacity-0"
       }`}
@@ -205,7 +211,7 @@ export default function SearchOverlay({ open, onClose }: SearchOverlayProps) {
           <div className="max-h-[60vh] overflow-y-auto p-4">
             {/* Loading */}
             {loading && (
-              <p className="py-6 text-center text-sm text-brand-text/50">Searching...</p>
+              <p className="py-6 text-center text-sm text-brand-text/50" aria-live="polite">Searching...</p>
             )}
 
             {/* Recent searches */}
@@ -244,11 +250,13 @@ export default function SearchOverlay({ open, onClose }: SearchOverlayProps) {
 
             {/* Results */}
             {showResults && !loading && results.length > 0 && (
-              <ul className="space-y-2">
+              <ul className="space-y-2" role="listbox" aria-label="Search results">
                 {results.map((product) => (
                   <li key={product.id}>
                     <button
                       type="button"
+                      role="option"
+                      aria-selected={false}
                       onClick={() => handleSuggestionClick(product)}
                       className="flex w-full items-center gap-4 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-brand-primary/5"
                     >
@@ -280,7 +288,7 @@ export default function SearchOverlay({ open, onClose }: SearchOverlayProps) {
 
             {/* No results */}
             {showNoResults && (
-              <p className="py-8 text-center text-sm text-brand-text/50">
+              <p className="py-8 text-center text-sm text-brand-text/50" aria-live="polite">
                 No products found for &ldquo;{query.trim()}&rdquo;
               </p>
             )}

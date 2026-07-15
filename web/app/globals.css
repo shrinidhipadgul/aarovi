@@ -5,7 +5,7 @@
   --foreground: #171717;
   --color-brand-bg: #FBF7F3;
   --color-brand-primary: #4F200D;
-  --color-brand-gold: #AF8255;
+  --color-brand-gold: #8B6B44;
   --color-brand-text: #2A1506;
   --color-brand-dark: #1A0D04;
 }
@@ -15,7 +15,7 @@
   --color-foreground: var(--foreground);
   --color-brand-bg: #FBF7F3;
   --color-brand-primary: #4F200D;
-  --color-brand-gold: #AF8255;
+  --color-brand-gold: #8B6B44;
   --color-brand-text: #2A1506;
   --color-brand-dark: #1A0D04;
   --font-sans: var(--font-geist-sans);
@@ -35,4 +35,22 @@ body {
   background: var(--color-brand-bg);
   color: var(--color-brand-text);
   font-family: var(--font-body), sans-serif;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--color-brand-gold);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }

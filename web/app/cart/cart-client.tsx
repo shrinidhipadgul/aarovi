@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
@@ -24,10 +24,11 @@ export default function CartPage() {
   const items = useCartItems();
   const loaded = useIsCartLoaded();
   const pending = usePendingCart();
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     if (loggedIn && !loaded) {
-      fetchCart();
+      fetchCart().catch(() => setError(true));
     }
   }, [loggedIn, loaded]);
 
@@ -64,6 +65,49 @@ export default function CartPage() {
         >
           Sign In
         </Link>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+        <h1 className="text-3xl font-semibold text-brand-primary">Your Cart</h1>
+        <div className="mt-8 flex flex-col items-center justify-center rounded-xl border border-dashed border-red-200 py-20 text-center">
+          <p className="text-lg font-medium text-red-600">Could not load cart</p>
+          <p className="mt-2 text-sm text-brand-text/60">Something went wrong. Please try again.</p>
+          <button
+            onClick={() => { setError(false); fetchCart().catch(() => setError(true)); }}
+            className="mt-8 rounded-lg bg-brand-primary px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-primary/90"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!loaded) {
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="h-8 w-40 rounded bg-brand-primary/10" />
+        <div className="mt-8 space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-4 rounded-xl border border-brand-primary/10 px-5 py-4">
+              <div className="h-20 w-16 flex-none rounded-lg bg-brand-primary/5" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 w-40 rounded bg-brand-primary/10" />
+                <div className="h-3 w-24 rounded bg-brand-primary/5" />
+                <div className="h-4 w-16 rounded bg-brand-primary/10" />
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="h-7 w-7 rounded bg-brand-primary/5" />
+                <div className="h-4 w-6 rounded bg-brand-primary/5" />
+                <div className="h-7 w-7 rounded bg-brand-primary/5" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

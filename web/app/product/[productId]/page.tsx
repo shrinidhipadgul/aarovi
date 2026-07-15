@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title: `${product.name} | Aarovi`,
       description: `${product.name} — ₹${product.price.toLocaleString("en-IN")}. ${product.description}`,
-      images: product.images.length > 0
+      images: product.images.length > 0 && product.images[0]
         ? [product.images[0].startsWith("http") ? product.images[0] : `${siteUrl}${product.images[0]}`]
         : undefined,
     },

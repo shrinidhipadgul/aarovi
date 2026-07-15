@@ -90,6 +90,8 @@ export default function Navbar() {
         onMouseLeave={() => setActiveDropdown(null)}
       >
         <button
+          aria-expanded={isOpen}
+          aria-haspopup="menu"
           className={`flex items-center gap-1 text-sm font-medium uppercase tracking-wider transition-colors hover:text-brand-gold ${
             isOpen ? "text-brand-gold" : "text-brand-text"
           }`}
@@ -110,11 +112,12 @@ export default function Navbar() {
           </svg>
         </button>
         {isOpen && (
-          <div className="absolute left-0 top-full mt-2 min-w-48 rounded-lg bg-white p-2 shadow-lg ring-1 ring-black/5">
+          <div role="menu" className="absolute left-0 top-full mt-2 min-w-48 rounded-lg bg-white p-2 shadow-lg ring-1 ring-black/5">
             {subs.map((sub) => (
               <Link
                 key={sub.label}
                 href={sub.href}
+                role="menuitem"
                 className={`block rounded-md px-4 py-2 text-sm transition-colors hover:bg-brand-bg ${
                   isActive(sub.href)
                     ? "font-medium text-brand-gold"
@@ -217,6 +220,8 @@ export default function Navbar() {
               <>
                 <button
                   onClick={() => setAccountOpen(!accountOpen)}
+                  aria-expanded={accountOpen}
+                  aria-haspopup="menu"
                   className="text-brand-text transition-colors hover:text-brand-gold"
                 >
                   <svg
@@ -234,21 +239,24 @@ export default function Navbar() {
                   </svg>
                 </button>
                 {accountOpen && (
-                  <div className="absolute right-0 top-full mt-2 min-w-44 rounded-lg bg-white p-2 shadow-lg ring-1 ring-black/5">
+                  <div role="menu" className="absolute right-0 top-full mt-2 min-w-44 rounded-lg bg-white p-2 shadow-lg ring-1 ring-black/5">
                     <Link
                       href={`/profile/${session.user.id}`}
+                      role="menuitem"
                       className="block rounded-md px-4 py-2 text-sm text-brand-text transition-colors hover:bg-brand-bg"
                     >
                       My Profile
                     </Link>
                     <Link
                       href="/orders"
+                      role="menuitem"
                       className="block rounded-md px-4 py-2 text-sm text-brand-text transition-colors hover:bg-brand-bg"
                     >
                       My Orders
                     </Link>
                     <button
                       onClick={handleSignOut}
+                      role="menuitem"
                       className="block w-full rounded-md px-4 py-2 text-left text-sm text-brand-text transition-colors hover:bg-brand-bg"
                     >
                       Sign Out

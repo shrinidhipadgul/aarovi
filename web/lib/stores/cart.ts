@@ -42,8 +42,9 @@ export async function fetchCart() {
     const items = (json.data ?? []) as CartItemData[];
     cartItems.set(items);
     isCartLoaded.set(true);
-  } catch {
+  } catch (e) {
     fetched = false;
+    throw e;
   }
 }
 
