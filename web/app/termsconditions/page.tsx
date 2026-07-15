@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { PolicyLayout, PolicySection } from "@/components/policy-layout";
 
 export const metadata: Metadata = {
-  title: "Terms & Conditions — Aarovi",
+  title: "Terms & Conditions",
   description: "Aarovi's terms and conditions governing the use of our website and services.",
+  openGraph: { title: "Terms & Conditions | Aarovi" },
 };
 
 const sections = [

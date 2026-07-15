@@ -56,8 +56,9 @@ const formatMoney = (n: number) =>
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { orderId } = await params;
   return {
-    title: `Order ${orderId} — Aarovi`,
+    title: `Order ${orderId}`,
     description: "Track the status of your order.",
+    robots: { index: false, follow: false },
   };
 }
 

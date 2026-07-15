@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Cormorant_Garamond, Montserrat } from "next/font/google";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
@@ -25,9 +25,49 @@ const montserrat = Montserrat({
   subsets: ["latin"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
 export const metadata: Metadata = {
-  title: "Aarovi — Ethnic Wear",
-  description: "Discover timeless ethnic wear for women and men.",
+  metadataBase: new URL(siteUrl),
+  title: {
+    template: "%s | Aarovi",
+    default: "Aarovi | Where style meets your soul",
+  },
+  description:
+    "Discover timeless ethnic wear for women and men at Aarovi. Shop kurtas, lehengas, sarees, and more.",
+  applicationName: "Aarovi",
+  icons: {
+    icon: "/favicon.ico",
+  },
+  keywords: [
+    "ethnic wear",
+    "Indian fashion",
+    "kurtas",
+    "lehengas",
+    "sarees",
+    "Aarovi",
+    "handcrafted fashion",
+  ],
+  openGraph: {
+    type: "website",
+    siteName: "Aarovi",
+    locale: "en_IN",
+    url: "/",
+  },
+  twitter: {
+    card: "summary_large_image",
+    site: "@aaroviofficial",
+    creator: "@aaroviofficial",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({

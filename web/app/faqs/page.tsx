@@ -3,8 +3,9 @@ import Accordion from "@/components/accordion";
 import type { AccordionItem } from "@/components/accordion";
 
 export const metadata: Metadata = {
-  title: "FAQs — Aarovi",
+  title: "FAQs",
   description: "Find answers to common questions about orders, shipping, returns, and products at Aarovi.",
+  openGraph: { title: "FAQs | Aarovi" },
 };
 
 const orders: AccordionItem[] = [

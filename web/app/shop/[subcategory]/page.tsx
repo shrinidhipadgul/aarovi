@@ -9,6 +9,10 @@ import {
 } from "@/lib/queries/products";
 import type { PaginationMeta } from "@/lib/types";
 import ProductGridClient from "@/components/shop/product-grid-client";
+import { JsonLd } from "@/components/json-ld";
+import { breadcrumbJsonLd } from "@/lib/json-ld";
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -25,12 +29,23 @@ export async function generateMetadata({
   const category = categories.find((c) => c.slug === subcategory);
 
   if (!category) {
-    return { title: "Category Not Found — Aarovi" };
+    return { title: { absolute: "Category Not Found | Aarovi" } };
   }
 
   return {
-    title: `${category.name} — Aarovi`,
-    description: `Browse our ${category.name} collection. Filter by price, and availability.`,
+    title: category.name,
+    description: `Browse our ${category.name} collection. Filter by price and availability.`,
+    openGraph: {
+      title: `${category.name} | Aarovi`,
+      description: `Browse our ${category.name} collection. Filter by price and availability.`,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${category.name} | Aarovi`,
+    },
+    alternates: {
+      canonical: `/shop/${subcategory}`,
+    },
   };
 }
 
@@ -66,7 +81,15 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   ].join("|");
 
   return (
-    <ProductGridClient
+    <>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", url: `${siteUrl}/` },
+          { name: "Collection", url: `${siteUrl}/shop/collection` },
+          { name: category.name, url: `${siteUrl}/shop/${subcategory}` },
+        ])}
+      />
+      <ProductGridClient
       key={filterKey}
       basePath={`/shop/${subcategory}`}
       title={category.name}
@@ -75,5 +98,5 @@ export default async function CategoryPage({ params, searchParams }: Props) {
       categories={categories as CategorySelect[]}
       fixedParams={{ subCategory: category.name }}
     />
-  );
+    </>);
 }

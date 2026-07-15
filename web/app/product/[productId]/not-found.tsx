@@ -19,5 +19,6 @@ export default function ProductNotFound() {
 }
 
 export const metadata: Metadata = {
-  title: "Product Not Found — Aarovi",
+  title: { absolute: "Product Not Found | Aarovi" },
+  description: "The product you're looking for doesn't exist or has been removed.",
 };

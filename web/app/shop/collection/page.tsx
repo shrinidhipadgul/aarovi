@@ -8,11 +8,19 @@ import {
 } from "@/lib/queries/products";
 import type { PaginationMeta } from "@/lib/types";
 import ProductGridClient from "@/components/shop/product-grid-client";
+import { JsonLd } from "@/components/json-ld";
+import { breadcrumbJsonLd } from "@/lib/json-ld";
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 export const metadata: Metadata = {
-  title: "Collection — Aarovi",
+  title: "Collection",
   description:
     "Browse our full collection of ethnic wear. Filter by category, price, and availability.",
+  openGraph: {
+    title: "Collection | Aarovi",
+    description: "Browse our full collection of ethnic wear. Filter by category, price, and availability.",
+  },
 };
 
 type SearchParams = Record<string, string | string[] | undefined>;
@@ -44,7 +52,14 @@ export default async function CollectionPage({
   ].join("|");
 
   return (
-    <ProductGridClient
+    <>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", url: `${siteUrl}/` },
+          { name: "Collection", url: `${siteUrl}/shop/collection` },
+        ])}
+      />
+      <ProductGridClient
       key={filterKey}
       basePath="/shop/collection"
       title="Collection"
@@ -52,5 +67,5 @@ export default async function CollectionPage({
       initialPagination={pagination as PaginationMeta}
       categories={categories as CategorySelect[]}
     />
-  );
+    </>);
 }

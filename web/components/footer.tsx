@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 const quickLinks = [
-  { label: "Shop", href: "/shop" },
+  { label: "Shop", href: "/shop/collection" },
   { label: "About Us", href: "/about" },
   { label: "Contact Us", href: "/contact" },
   { label: "Customize", href: "/customize" },

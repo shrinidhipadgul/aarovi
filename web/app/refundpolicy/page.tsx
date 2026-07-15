@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { PolicyLayout, PolicySection } from "@/components/policy-layout";
 
 export const metadata: Metadata = {
-  title: "Refund Policy — Aarovi",
+  title: "Refund Policy",
   description: "Aarovi's refund and return policy for ethnic wear.",
+  openGraph: { title: "Refund Policy | Aarovi" },
 };
 
 const sections = [

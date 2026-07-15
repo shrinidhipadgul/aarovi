@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import {
   fetchProductById,
   fetchRelatedProducts,
+  fetchAllCategories,
   type ProductCardSelect,
 } from "@/lib/queries/products";
 import ProductCard from "@/components/product-card";
@@ -10,6 +11,10 @@ import ProductGallery from "@/components/product-gallery";
 import ProductActions from "@/components/product-actions";
 import RecentlyViewedTracker from "@/components/recently-viewed-tracker";
 import RecentlyViewed from "@/components/recently-viewed";
+import { JsonLd } from "@/components/json-ld";
+import { productJsonLd, breadcrumbJsonLd } from "@/lib/json-ld";
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 interface Props {
   params: Promise<{ productId: string }>;
@@ -20,12 +25,29 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const product = await fetchProductById(productId);
 
   if (!product) {
-    return { title: "Product Not Found — Aarovi" };
+    return { title: { absolute: "Product Not Found | Aarovi" } };
   }
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
   return {
-    title: `${product.name} — Aarovi`,
-    description: product.description,
+    title: product.name,
+    description: `${product.name} — ₹${product.price.toLocaleString("en-IN")}. ${product.description}`,
+    openGraph: {
+      title: `${product.name} | Aarovi`,
+      description: `${product.name} — ₹${product.price.toLocaleString("en-IN")}. ${product.description}`,
+      images: product.images.length > 0
+        ? [product.images[0].startsWith("http") ? product.images[0] : `${siteUrl}${product.images[0]}`]
+        : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${product.name} | Aarovi`,
+      description: `${product.name} — ₹${product.price.toLocaleString("en-IN")}.`,
+    },
+    alternates: {
+      canonical: `/product/${productId}`,
+    },
   };
 }
 
@@ -53,7 +75,22 @@ export default async function ProductPage({ params }: Props) {
     product.id,
   );
 
+  const allCategories = await fetchAllCategories();
+  const subCategoryMatch = allCategories.find((c) => c.name === product.subCategory);
+
   return (
+    <>
+      <JsonLd data={productJsonLd(product, siteUrl)} />
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", url: `${siteUrl}/` },
+          { name: "Collection", url: `${siteUrl}/shop/collection` },
+          ...(subCategoryMatch
+            ? [{ name: product.subCategory, url: `${siteUrl}/shop/${subCategoryMatch.slug}` }]
+            : []),
+          { name: product.name, url: `${siteUrl}/product/${product.id}` },
+        ])}
+      />
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <RecentlyViewedTracker product={slim} />
 
@@ -117,5 +154,5 @@ export default async function ProductPage({ params }: Props) {
 
       <RecentlyViewed excludeId={product.id} />
     </div>
-  );
+    </>);
 }

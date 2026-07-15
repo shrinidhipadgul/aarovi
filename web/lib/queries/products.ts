@@ -244,3 +244,10 @@ export async function fetchAllCategories(): Promise<CategorySelect[]> {
     orderBy: { name: "asc" },
   });
 }
+
+export async function findCategoryByName(
+  name: string,
+): Promise<CategorySelect | null> {
+  const categories = await fetchAllCategories();
+  return categories.find((c) => c.name === name) ?? null;
+}

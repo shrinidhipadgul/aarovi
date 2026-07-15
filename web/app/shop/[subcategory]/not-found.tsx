@@ -2,7 +2,8 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Category Not Found — Aarovi",
+  title: { absolute: "Category Not Found | Aarovi" },
+  description: "The category you're looking for doesn't exist or has been removed.",
 };
 
 export default function CategoryNotFound() {

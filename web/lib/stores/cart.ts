@@ -1,10 +1,30 @@
-import { atom } from "nanostores";
+import { atom, computed } from "nanostores";
 import { useStore } from "@nanostores/react";
+
+interface CartItemProduct {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  images: string[];
+}
+
+interface CartItemData {
+  id: string;
+  productId: string;
+  size: string;
+  quantity: number;
+  product: CartItemProduct;
+}
 
 type AddResult = "ok" | "unauthorized" | "error";
 
-export const cartCount = atom(0);
+export const cartItems = atom<CartItemData[]>([]);
+export const cartCount = computed(cartItems, (items) =>
+  items.reduce((sum, item) => sum + item.quantity, 0),
+);
 export const pendingCart = atom(false);
+export const isCartLoaded = atom(false);
 
 let fetched = false;
 
@@ -19,18 +39,17 @@ export async function fetchCart() {
       throw new Error("Failed to fetch cart");
     }
     const json = await res.json();
-    const count = (json.data ?? []).reduce(
-      (sum: number, item: { quantity: number }) => sum + item.quantity,
-      0,
-    );
-    cartCount.set(count);
+    const items = (json.data ?? []) as CartItemData[];
+    cartItems.set(items);
+    isCartLoaded.set(true);
   } catch {
     fetched = false;
   }
 }
 
 export function resetCart() {
-  cartCount.set(0);
+  cartItems.set([]);
+  isCartLoaded.set(false);
   fetched = false;
 }
 
@@ -41,9 +60,8 @@ export async function addToCart(
 ): Promise<AddResult> {
   if (pendingCart.get()) return "error";
 
-  const prev = cartCount.get();
+  const prevItems = cartItems.get();
   pendingCart.set(true);
-  cartCount.set(prev + quantity);
 
   try {
     const res = await fetch("/api/cart/add", {
@@ -53,21 +71,88 @@ export async function addToCart(
     });
 
     if (res.status === 401) {
-      cartCount.set(prev);
+      cartItems.set(prevItems);
       return "unauthorized";
     }
 
     if (!res.ok) {
-      cartCount.set(prev);
+      cartItems.set(prevItems);
+      return "error";
+    }
+
+    fetched = false;
+    fetchCart();
+    return "ok";
+  } catch {
+    cartItems.set(prevItems);
+    return "error";
+  } finally {
+    pendingCart.set(false);
+  }
+}
+
+export async function updateCartQuantity(
+  cartItemId: string,
+  quantity: number,
+): Promise<AddResult> {
+  const prevItems = cartItems.get();
+  cartItems.set(
+    prevItems.map((item) =>
+      item.id === cartItemId ? { ...item, quantity } : item,
+    ),
+  );
+
+  try {
+    const res = await fetch("/api/cart/update", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ cartItemId, quantity }),
+    });
+
+    if (res.status === 401) {
+      cartItems.set(prevItems);
+      return "unauthorized";
+    }
+
+    if (!res.ok) {
+      cartItems.set(prevItems);
       return "error";
     }
 
     return "ok";
   } catch {
-    cartCount.set(prev);
+    cartItems.set(prevItems);
     return "error";
-  } finally {
-    pendingCart.set(false);
+  }
+}
+
+export async function removeFromCart(
+  cartItemId: string,
+): Promise<AddResult> {
+  const prevItems = cartItems.get();
+  cartItems.set(prevItems.filter((item) => item.id !== cartItemId));
+
+  try {
+    const res = await fetch("/api/cart/remove", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ cartItemId }),
+    });
+
+    if (res.status === 401) {
+      cartItems.set(prevItems);
+      return "unauthorized";
+    }
+
+    if (!res.ok) {
+      cartItems.set(prevItems);
+      return "error";
+    }
+
+    return "ok";
+  } catch {
+    cartItems.set(prevItems);
+    return "error";
   }
 }
 
@@ -75,6 +160,14 @@ export function useCartCount() {
   return useStore(cartCount);
 }
 
+export function useCartItems() {
+  return useStore(cartItems);
+}
+
 export function usePendingCart() {
   return useStore(pendingCart);
+}
+
+export function useIsCartLoaded() {
+  return useStore(isCartLoaded);
 }
