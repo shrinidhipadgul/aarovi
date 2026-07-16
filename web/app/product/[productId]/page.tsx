@@ -99,7 +99,7 @@ export default async function ProductPage({ params }: Props) {
 
         <div className="flex-1 space-y-5">
           <div>
-            <h1 className="font-display text-3xl font-semibold text-brand-primary sm:text-4xl">
+            <h1 className="font-display text-3xl font-bold text-brand-primary sm:text-4xl">
               {product.name}
             </h1>
             <div className="mt-3 flex flex-wrap items-center gap-3">
@@ -140,7 +140,7 @@ export default async function ProductPage({ params }: Props) {
       {related.length > 0 && (
         <section className="mt-16">
           <div className="mb-8 text-center">
-            <h2 className="font-display text-2xl font-semibold text-brand-primary sm:text-3xl">
+            <h2 className="font-display text-2xl font-bold text-brand-primary sm:text-3xl">
               You May Also Like
             </h2>
           </div>

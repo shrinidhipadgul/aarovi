@@ -76,7 +76,7 @@ export default function ContactPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
       <div className="mb-10 text-center">
-        <h1 className="font-display text-3xl font-semibold text-brand-primary sm:text-4xl">
+        <h1 className="font-display text-3xl font-bold text-brand-primary sm:text-4xl">
           Get in Touch
         </h1>
         <p className="mt-3 text-base text-brand-text/60">

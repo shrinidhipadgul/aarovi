@@ -1,29 +1,49 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Cormorant_Garamond, Montserrat } from "next/font/google";
+import localFont from "next/font/local";
+import { Inter, Cormorant_Garamond, IBM_Plex_Mono } from "next/font/google";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
 import { ScrollToTop } from "@/components/scroll-to-top";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const canela = localFont({
+  src: "../public/fonts/canela/Canela-Bold.woff2",
+  weight: "700",
+  style: "normal",
+  variable: "--font-canela",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const canelaDeck = localFont({
+  src: [
+    {
+      path: "../public/fonts/canela/CanelaDeck-Regular.woff2",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/canela/CanelaDeck-Bold.woff2",
+      weight: "700",
+      style: "normal",
+    },
+  ],
+  variable: "--font-canela-deck",
+});
+
+const inter = Inter({
   subsets: ["latin"],
+  variable: "--font-inter",
 });
 
 const cormorantGaramond = Cormorant_Garamond({
-  variable: "--font-cormorant-garamond",
+  variable: "--font-serif",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
 });
 
-const montserrat = Montserrat({
-  variable: "--font-montserrat",
+const ibmPlexMono = IBM_Plex_Mono({
+  variable: "--font-ibm-plex-mono",
   subsets: ["latin"],
+  weight: ["400", "500", "700"],
 });
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -79,7 +99,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${cormorantGaramond.variable} ${montserrat.variable} h-full antialiased`}
+      className={`${canela.variable} ${canelaDeck.variable} ${inter.variable} ${cormorantGaramond.variable} ${ibmPlexMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <ScrollToTop />

@@ -60,7 +60,7 @@ export default function SupportPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 sm:py-24">
       <div className="text-center">
-        <h1 className="font-display text-3xl font-semibold text-brand-primary sm:text-4xl">
+        <h1 className="font-display text-3xl font-bold text-brand-primary sm:text-4xl">
           How can we help?
         </h1>
         <p className="mt-3 text-base text-brand-text/60">
@@ -99,7 +99,7 @@ export default function SupportPage() {
             <div className="text-brand-gold transition-colors group-hover:text-brand-primary">
               {topic.icon}
             </div>
-            <h2 className="mt-4 font-display text-lg font-semibold text-brand-primary">
+            <h2 className="mt-4 font-display text-lg font-bold text-brand-primary">
               {topic.title}
             </h2>
             <p className="mt-2 text-sm text-brand-text/60">
@@ -110,7 +110,7 @@ export default function SupportPage() {
       </div>
 
       <div className="mt-16 rounded-xl border border-brand-primary/10 bg-brand-bg p-8 text-center">
-        <h2 className="font-display text-xl font-semibold text-brand-primary">
+        <h2 className="font-display text-xl font-bold text-brand-primary">
           Still need help?
         </h2>
         <p className="mt-2 text-sm text-brand-text/60">

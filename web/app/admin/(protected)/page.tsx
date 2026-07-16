@@ -23,7 +23,7 @@ export default async function AdminDashboardPage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl font-semibold text-brand-primary">
+      <h1 className="font-display text-3xl font-bold text-brand-primary">
         Dashboard
       </h1>
       <p className="mt-2 text-sm text-brand-text/60">
@@ -37,7 +37,7 @@ export default async function AdminDashboardPage() {
             className="rounded-xl border border-brand-primary/15 bg-brand-bg p-6"
           >
             <p className="text-sm font-medium text-brand-text/60">{stat.label}</p>
-            <p className="mt-1 font-display text-3xl font-semibold text-brand-primary">
+            <p className="mt-1 font-display text-3xl font-bold text-brand-primary">
               {stat.value}
             </p>
           </div>
@@ -49,7 +49,7 @@ export default async function AdminDashboardPage() {
           href="/admin/products"
           className="rounded-xl border border-brand-primary/15 bg-brand-bg p-6 transition-colors hover:border-brand-gold"
         >
-          <h2 className="font-display text-lg font-semibold text-brand-primary">
+          <h2 className="font-display text-lg font-bold text-brand-primary">
             Products
           </h2>
           <p className="mt-1 text-sm text-brand-text/60">
@@ -58,7 +58,7 @@ export default async function AdminDashboardPage() {
         </Link>
 
         <div className="rounded-xl border border-dashed border-brand-primary/15 bg-brand-bg/50 p-6 opacity-60">
-          <h2 className="font-display text-lg font-semibold text-brand-primary">
+          <h2 className="font-display text-lg font-bold text-brand-primary">
             Orders (Coming Soon)
           </h2>
           <p className="mt-1 text-sm text-brand-text/60">

@@ -56,7 +56,7 @@ export default function NewsletterSection() {
   return (
     <section className="bg-brand-dark px-4 py-16 sm:py-20">
       <div className="mx-auto max-w-2xl text-center">
-        <h2 className="font-display text-3xl text-white sm:text-4xl">
+        <h2 className="font-display text-3xl font-bold text-white sm:text-4xl">
           Join Our Newsletter
         </h2>
         <p className="mt-3 text-sm text-white/60">

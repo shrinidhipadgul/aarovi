@@ -37,7 +37,7 @@ const values = [
 export default function AboutPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 sm:py-24">
-      <h1 className="font-display text-4xl font-semibold text-brand-primary sm:text-5xl">
+      <h1 className="font-display text-4xl font-bold text-brand-primary sm:text-5xl">
         About Aarovi
       </h1>
 
@@ -58,7 +58,7 @@ export default function AboutPage() {
       </section>
 
       <section className="mt-16">
-        <h2 className="font-display text-2xl font-semibold text-brand-primary">
+        <h2 className="font-display text-2xl font-bold text-brand-primary">
           Our Mission
         </h2>
         <p className="mt-4 text-base leading-relaxed text-brand-text/70">
@@ -70,7 +70,7 @@ export default function AboutPage() {
       </section>
 
       <section className="mt-16">
-        <h2 className="font-display text-2xl font-semibold text-brand-primary">
+        <h2 className="font-display text-2xl font-bold text-brand-primary">
           Our Values
         </h2>
         <div className="mt-8 grid gap-8 sm:grid-cols-2">
@@ -79,7 +79,7 @@ export default function AboutPage() {
               key={value.title}
               className="rounded-xl border border-brand-primary/10 bg-white p-6"
             >
-              <h3 className="font-display text-lg font-semibold text-brand-primary">
+              <h3 className="font-display text-lg font-bold text-brand-primary">
                 {value.title}
               </h3>
               <p className="mt-2 text-sm leading-relaxed text-brand-text/70">

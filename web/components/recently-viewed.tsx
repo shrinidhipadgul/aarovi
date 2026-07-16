@@ -36,7 +36,7 @@ export default function RecentlyViewed({ excludeId }: RecentlyViewedProps) {
   return (
     <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <div className="mb-6 flex items-center justify-between">
-        <h2 className="font-display text-2xl font-semibold text-brand-primary">
+        <h2 className="font-display text-2xl font-bold text-brand-primary">
           Recently Viewed
         </h2>
         <button

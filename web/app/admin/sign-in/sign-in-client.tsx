@@ -52,7 +52,7 @@ function AdminSignInForm() {
 
   return (
     <div className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-4 py-16 sm:px-6">
-      <h1 className="text-center font-display text-3xl font-semibold text-brand-primary">
+      <h1 className="text-center font-display text-3xl font-bold text-brand-primary">
         Admin Portal
       </h1>
       <p className="mt-2 text-center text-sm text-brand-text/60">

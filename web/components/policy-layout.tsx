@@ -11,7 +11,7 @@ export function PolicyLayout({
 }) {
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
-      <h1 className="font-display text-3xl font-semibold text-brand-primary sm:text-4xl">
+      <h1 className="font-display text-3xl font-bold text-brand-primary sm:text-4xl">
         {title}
       </h1>
       <p className="mt-2 text-sm text-brand-text/60">

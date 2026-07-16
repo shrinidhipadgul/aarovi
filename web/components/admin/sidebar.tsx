@@ -15,7 +15,7 @@ export function AdminSidebar({ userEmail }: { userEmail: string | undefined }) {
   return (
     <aside className="hidden w-56 shrink-0 md:block">
       <div className="sticky top-24">
-        <p className="font-display text-lg font-semibold text-brand-primary">
+        <p className="font-display text-lg font-bold text-brand-primary">
           Admin
         </p>
 

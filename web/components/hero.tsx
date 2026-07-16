@@ -56,7 +56,7 @@ export default function Hero() {
 
         <motion.h1
           variants={childVariants}
-          className="font-display text-4xl font-semibold leading-tight text-white sm:text-5xl md:text-6xl lg:text-7xl"
+          className="font-hero text-4xl font-bold leading-tight text-white sm:text-5xl md:text-6xl lg:text-7xl"
         >
           Where style meets your soul
         </motion.h1>
