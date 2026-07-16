@@ -7,6 +7,11 @@ datasource db {
   provider = "postgresql"
 }
 
+enum UserRole {
+  USER
+  ADMIN
+}
+
 // ===== Better Auth core tables (v1.6 core schema) =====
 
 model User {
@@ -16,6 +21,7 @@ model User {
   emailVerified Boolean
   image         String?
   phone         String?
+  role          UserRole        @default(USER)
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
   sessions      Session[]
