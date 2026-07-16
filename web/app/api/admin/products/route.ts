@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slugify";
 import { requireAdmin } from "@/lib/api-require-admin";
 import { withErrorHandler } from "@/lib/with-error-handler";
-import { successResponse, errorResponse, notFoundResponse } from "@/lib/api-response";
+import { successResponse, errorResponse } from "@/lib/api-response";
 
 function validateProductBody(body: Record<string, unknown>, isUpdate = false) {
   const errors: Record<string, string[]> = {};

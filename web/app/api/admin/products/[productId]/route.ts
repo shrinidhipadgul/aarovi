@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/prisma";
-import { slugify } from "@/lib/slugify";
 import { requireAdmin } from "@/lib/api-require-admin";
 import { withErrorHandler } from "@/lib/with-error-handler";
 import { successResponse, errorResponse, notFoundResponse } from "@/lib/api-response";
