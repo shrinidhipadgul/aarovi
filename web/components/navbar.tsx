@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, startTransition } from "react";
+import { useState, useEffect, useRef, startTransition } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import MobileDrawer from "@/components/mobile-drawer";
@@ -32,6 +32,7 @@ export default function Navbar() {
   );
   const [accountOpen, setAccountOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const serverCartCount = useCartCount();
   const localCartCount = useLocalCartCount();
@@ -99,11 +100,18 @@ export default function Navbar() {
     subs: { label: string; href: string }[],
   ) => {
     const isOpen = activeDropdown === key;
+    const show = () => {
+      if (hideTimer.current) clearTimeout(hideTimer.current);
+      setActiveDropdown(key);
+    };
+    const hide = () => {
+      hideTimer.current = setTimeout(() => setActiveDropdown(null), 150);
+    };
     return (
       <li
         className="relative"
-        onMouseEnter={() => setActiveDropdown(key)}
-        onMouseLeave={() => setActiveDropdown(null)}
+        onMouseEnter={show}
+        onMouseLeave={hide}
       >
         <button
           aria-expanded={isOpen}
@@ -128,7 +136,12 @@ export default function Navbar() {
           </svg>
         </button>
         {isOpen && (
-          <div role="menu" className="absolute left-0 top-full mt-2 min-w-48 rounded-lg bg-white p-2 shadow-lg ring-1 ring-black/5">
+          <div
+            role="menu"
+            onMouseEnter={show}
+            onMouseLeave={hide}
+            className="absolute left-0 top-full mt-2 min-w-48 rounded-lg bg-white p-2 shadow-lg ring-1 ring-black/5"
+          >
             {subs.map((sub) => (
               <Link
                 key={sub.label}
