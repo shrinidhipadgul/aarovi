@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { isAdmin } from "@/lib/is-admin";
-import { ensureAdminProvisioned } from "@/lib/seed-admin";
 import { AdminSidebar } from "@/components/admin/sidebar";
 
 export default async function AdminLayout({
@@ -8,8 +7,6 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  await ensureAdminProvisioned();
-
   const { isAdmin: admin, session } = await isAdmin();
 
   if (!session?.user) {
