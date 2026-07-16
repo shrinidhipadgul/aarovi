@@ -200,16 +200,6 @@ export default function Navbar() {
           </li>
           <li>
             <Link
-              href="/customize"
-              className={`text-sm font-medium uppercase tracking-wider transition-colors hover:text-brand-gold ${
-                isActive("/customize") ? "text-brand-gold" : "text-brand-text"
-              }`}
-            >
-              CUSTOMIZE
-            </Link>
-          </li>
-          <li>
-            <Link
               href="/contact"
               className={`text-sm font-medium uppercase tracking-wider transition-colors hover:text-brand-gold ${
                 isActive("/contact") ? "text-brand-gold" : "text-brand-text"
