@@ -7,8 +7,8 @@ export const GET = async (req: Request) => {
     const url = new URL(req.url);
     const productId = url.pathname.split("/").filter(Boolean).pop() ?? "";
 
-    const product = await prisma.product.findUnique({
-      where: { id: productId },
+    const product = await prisma.product.findFirst({
+      where: { id: productId, deletedAt: null },
       select: {
         id: true,
         name: true,

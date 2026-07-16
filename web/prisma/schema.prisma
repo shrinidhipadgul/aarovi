@@ -86,6 +86,7 @@ model Product {
   inStock       Boolean        @default(true)
   stock         Int            @default(0)
   featured      Boolean        @default(false)
+  deletedAt     DateTime?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   orderItems    OrderItem[]

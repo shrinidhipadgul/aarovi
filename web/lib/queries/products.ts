@@ -137,9 +137,10 @@ export async function fetchProducts(
     conditions.push({ inStock: true });
   }
 
-  const where: Prisma.ProductWhereInput = conditions.length
-    ? { AND: conditions }
-    : {};
+  const where: Prisma.ProductWhereInput = {
+    deletedAt: null,
+    ...(conditions.length ? { AND: conditions } : {}),
+  };
 
   const orderBy: Prisma.ProductOrderByWithRelationInput =
     (params.sort && SORT_MAP[params.sort]) || SORT_MAP.newest;
@@ -198,8 +199,8 @@ export type ProductDetailSelect = Prisma.ProductGetPayload<{
 export async function fetchProductById(
   id: string,
 ): Promise<ProductDetailSelect | null> {
-  return prisma.product.findUnique({
-    where: { id },
+  return prisma.product.findFirst({
+    where: { id, deletedAt: null },
     select: {
       id: true,
       name: true,
@@ -222,7 +223,7 @@ export async function fetchRelatedProducts(
   excludeId: string,
 ): Promise<ProductCardSelect[]> {
   return prisma.product.findMany({
-    where: { subCategory, id: { not: excludeId } },
+    where: { subCategory, id: { not: excludeId }, deletedAt: null },
     take: 4,
     orderBy: { createdAt: "desc" },
     select: {

@@ -9,6 +9,7 @@ export const GET = withErrorHandler(async (req: Request) => {
 
   const products = await prisma.product.findMany({
     where: {
+      deletedAt: null,
       OR: [
         { name: { contains: q, mode: "insensitive" } },
         { category: { contains: q, mode: "insensitive" } },
