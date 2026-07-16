@@ -38,8 +38,21 @@ export default function Navbar() {
   const wishlistCount = useWishlistCount();
 
   const { data: session } = authClient.useSession();
+  const [isAdmin, setIsAdmin] = useState(false);
   const loggedIn = !!session;
   const cartCount = loggedIn ? serverCartCount : localCartCount;
+
+  useEffect(() => {
+    if (!session) return;
+    let cancelled = false;
+    fetch("/api/admin/me")
+      .then((r) => r.json())
+      .then((j) => {
+        if (!cancelled) setIsAdmin(j.success && j.data?.admin === true);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [session]);
   const handleSignOut = () => {
     resetWishlist();
     resetCart();
@@ -254,6 +267,15 @@ export default function Navbar() {
                     >
                       My Orders
                     </Link>
+                    {isAdmin && (
+                      <Link
+                        href="/admin"
+                        role="menuitem"
+                        className="block rounded-md px-4 py-2 text-sm font-medium text-brand-gold transition-colors hover:bg-brand-bg"
+                      >
+                        Admin Panel
+                      </Link>
+                    )}
                     <button
                       onClick={handleSignOut}
                       role="menuitem"
