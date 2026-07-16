@@ -40,7 +40,7 @@ export default function Hero() {
           <source src="/hero.mp4" type="video/mp4" />
         </video>
       </div>
-      <div className="absolute inset-0 bg-black/20" />
+      <div className="absolute inset-0 bg-black/30" />
       <motion.div
         initial="hidden"
         animate="visible"
