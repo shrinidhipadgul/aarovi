@@ -3,6 +3,8 @@ import localFont from "next/font/local";
 import { Inter, Cormorant_Garamond, IBM_Plex_Mono } from "next/font/google";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
+import Preloader from "@/components/preloader";
+import ScrollProgress from "@/components/scroll-progress";
 import { ScrollToTop } from "@/components/scroll-to-top";
 import "./globals.css";
 
@@ -102,6 +104,8 @@ export default function RootLayout({
       className={`${canela.variable} ${canelaDeck.variable} ${inter.variable} ${cormorantGaramond.variable} ${ibmPlexMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        <Preloader />
+        <ScrollProgress />
         <ScrollToTop />
         <a
           href="#main-content"

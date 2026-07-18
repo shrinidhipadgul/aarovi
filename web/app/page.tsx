@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Hero from "@/components/hero";
+import Marquee from "@/components/marquee";
+import SmoothScroll from "@/components/smooth-scroll";
 import FeaturedProducts from "@/components/featured-products";
 import CategoryCards from "@/components/category-cards";
 import NewsletterSection from "@/components/newsletter-section";
@@ -17,7 +19,9 @@ export const metadata: Metadata = {
 export default function Home() {
   return (
     <>
+      <SmoothScroll />
       <Hero />
+      <Marquee />
       <FeaturedProducts />
       <RecentlyViewed />
       <CategoryCards />

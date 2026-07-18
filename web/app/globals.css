@@ -8,6 +8,11 @@
   --color-brand-gold: #8B6B44;
   --color-brand-text: #2A1506;
   --color-brand-dark: #1A0D04;
+  /* Atelier palette extensions */
+  --color-brand-ivory: #F8F2E9;
+  --color-brand-parchment: #F0E7D7;
+  --color-brand-gold-light: #C6A56B;
+  --color-brand-espresso: #221105;
 }
 
 @theme inline {
@@ -18,6 +23,10 @@
   --color-brand-gold: #8B6B44;
   --color-brand-text: #2A1506;
   --color-brand-dark: #1A0D04;
+  --color-brand-ivory: #F8F2E9;
+  --color-brand-parchment: #F0E7D7;
+  --color-brand-gold-light: #C6A56B;
+  --color-brand-espresso: #221105;
   --font-sans: var(--font-inter);
   --font-mono: var(--font-ibm-plex-mono);
   --font-display: var(--font-canela-deck);
@@ -33,9 +42,14 @@
 }
 
 body {
-  background: var(--color-brand-bg);
+  background: var(--color-brand-ivory);
   color: var(--color-brand-text);
   font-family: var(--font-sans), sans-serif;
+}
+
+::selection {
+  background: var(--color-brand-gold);
+  color: var(--color-brand-ivory);
 }
 
 *:focus-visible {
@@ -54,4 +68,29 @@ body {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border-width: 0;
+}
+
+/* ——— Atelier textures ——— */
+
+/* Fine paper grain — dark speckle for light grounds */
+.texture-grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  background-size: 240px 240px;
+}
+
+/* Fine film grain — light speckle for dark grounds */
+.texture-grain-dark {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.9 0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+  background-size: 240px 240px;
+}
+
+/* Woven silk sheen — layered diagonal hairlines, very subtle */
+.texture-weave {
+  background-image: repeating-linear-gradient(
+    115deg,
+    transparent 0px,
+    transparent 11px,
+    rgba(139, 107, 68, 0.05) 11px,
+    rgba(139, 107, 68, 0.05) 12px
+  );
 }

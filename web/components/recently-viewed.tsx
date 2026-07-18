@@ -34,24 +34,32 @@ export default function RecentlyViewed({ excludeId }: RecentlyViewedProps) {
   };
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-      <div className="mb-6 flex items-center justify-between">
-        <h2 className="font-display text-2xl font-bold text-brand-primary">
-          Recently Viewed
-        </h2>
-        <button
-          onClick={handleClear}
-          className="text-xs font-medium uppercase tracking-wider text-brand-gold hover:underline"
-        >
-          Clear
-        </button>
-      </div>
-      <div className="flex gap-6 overflow-x-auto pb-2">
-        {filtered.map((product) => (
-          <div key={product.id} className="min-w-[220px] w-[220px] shrink-0 sm:min-w-[240px] sm:w-[240px]">
-            <ProductCard product={product} />
+    <section className="bg-brand-ivory texture-grain">
+      <div className="mx-auto max-w-7xl px-4 pb-20 pt-4 sm:px-6 lg:px-8">
+        <div className="flex items-end justify-between border-b border-brand-primary/15 pb-5">
+          <div>
+            <p className="font-mono text-[11px] uppercase tracking-[0.35em] text-brand-gold">
+              Your eye, lately
+            </p>
+            <h2 className="mt-2 font-display text-2xl font-bold text-brand-primary sm:text-3xl">
+              Recently{" "}
+              <span className="font-serif italic text-brand-gold">Viewed</span>
+            </h2>
           </div>
-        ))}
+          <button
+            onClick={handleClear}
+            className="font-mono text-[11px] uppercase tracking-[0.25em] text-brand-gold transition-colors hover:text-brand-primary"
+          >
+            Clear
+          </button>
+        </div>
+        <div className="mt-8 flex gap-6 overflow-x-auto pb-2">
+          {filtered.map((product) => (
+            <div key={product.id} className="min-w-[220px] w-[220px] shrink-0 sm:min-w-[240px] sm:w-[240px]">
+              <ProductCard product={product} />
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );

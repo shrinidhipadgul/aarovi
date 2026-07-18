@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef, startTransition } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useGSAP } from "@gsap/react";
+import { gsap } from "@/lib/animations";
 import MobileDrawer from "@/components/mobile-drawer";
 import SearchOverlay from "@/components/search-overlay";
 import { authClient } from "@/lib/auth-client";
@@ -33,6 +35,7 @@ export default function Navbar() {
   const [accountOpen, setAccountOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const headerRef = useRef<HTMLElement>(null);
 
   const serverCartCount = useCartCount();
   const localCartCount = useLocalCartCount();
@@ -67,12 +70,36 @@ export default function Navbar() {
     });
   };
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 0);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  useGSAP(
+    () => {
+      const header = headerRef.current;
+      if (!header) return;
+      const quickY = gsap.quickTo(header, "y", {
+        duration: 0.35,
+        ease: "power3.out",
+      });
+      let lastY = window.scrollY;
+
+      const onScroll = () => {
+        const currentY = window.scrollY;
+        setScrolled(currentY > 10);
+
+        if (currentY < 100) {
+          quickY(0);
+        } else if (currentY > lastY + 4) {
+          quickY(-header.offsetHeight - 4);
+        } else if (currentY < lastY - 4) {
+          quickY(0);
+        }
+        lastY = currentY;
+      };
+
+      onScroll();
+      window.addEventListener("scroll", onScroll, { passive: true });
+      return () => window.removeEventListener("scroll", onScroll);
+    },
+    [],
+  );
 
   useEffect(() => {
     if (session) {
@@ -164,6 +191,7 @@ export default function Navbar() {
 
   return (
     <header
+      ref={headerRef}
       className={`sticky top-0 z-50 transition-all duration-300 ${
         scrolled
           ? "bg-brand-bg/95 backdrop-blur-sm shadow-sm"

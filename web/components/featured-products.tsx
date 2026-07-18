@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import ProductCard from "@/components/product-card";
+import SectionReveal from "@/components/section-reveal";
 
 export default async function FeaturedProducts() {
   const products = await prisma.product.findMany({
@@ -11,24 +13,50 @@ export default async function FeaturedProducts() {
   if (products.length === 0) return null;
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-      <div className="mb-10 text-center">
-        <span className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-gold">
-          Curated for you
-        </span>
-        <h2 className="mt-2 text-3xl font-semibold text-brand-primary sm:text-4xl">
-          Featured Collection
-        </h2>
-        <p className="mx-auto mt-3 max-w-md text-sm text-brand-text/60">
-          Handpicked pieces showcasing the finest of our collection
-        </p>
-      </div>
+    <SectionReveal className="bg-brand-ivory texture-grain texture-weave">
+      <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
+        {/* Editorial split header */}
+        <div className="flex flex-col gap-8 border-b border-brand-primary/15 pb-10 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="reveal-eyebrow font-mono text-[11px] uppercase tracking-[0.35em] text-brand-gold">
+              N° 01 — Curated for you
+            </p>
+            <h2 className="reveal-title mt-4 font-display text-4xl font-bold leading-[1.05] text-brand-primary sm:text-5xl lg:text-6xl">
+              The Featured{" "}
+              <span className="font-serif italic text-brand-gold">
+                Collection
+              </span>
+            </h2>
+          </div>
+          <div className="reveal-sub max-w-sm lg:pb-2 lg:text-right">
+            <p className="font-serif text-lg italic leading-relaxed text-brand-text/70">
+              Handpicked pieces showcasing the finest of the atelier — each one
+              cut, dyed and finished by hand.
+            </p>
+            <Link
+              href="/shop/collection"
+              className="group mt-4 inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.25em] text-brand-primary transition-colors hover:text-brand-gold"
+            >
+              View all pieces
+              <span className="h-px w-8 bg-brand-gold transition-all duration-300 group-hover:w-12" />
+              <span aria-hidden="true">→</span>
+            </Link>
+          </div>
+        </div>
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {products.map((product) => (
-          <ProductCard key={product.id} product={product} />
-        ))}
+        {/* Staggered editorial grid */}
+        <div className="mt-14 grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
+          {products.map((product, i) => (
+            <div
+              key={product.id}
+              className={`reveal-card ${i % 2 === 1 ? "lg:mt-12" : ""}`}
+              style={{ clipPath: "inset(0 0 100% 0)" } as React.CSSProperties}
+            >
+              <ProductCard product={product} />
+            </div>
+          ))}
+        </div>
       </div>
-    </section>
+    </SectionReveal>
   );
 }
