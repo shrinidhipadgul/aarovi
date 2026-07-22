@@ -132,7 +132,6 @@ export default function Hero() {
       <div ref={videoRef} className="absolute inset-0 overflow-hidden">
         <video
           autoPlay
-          loop
           muted
           playsInline
           className="absolute inset-0 h-full w-full object-cover"
