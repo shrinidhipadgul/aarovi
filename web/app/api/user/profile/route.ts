@@ -1,57 +1,52 @@
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/get-session";
+import { requireAuth } from "@/lib/api-require-auth";
 import { withErrorHandler } from "@/lib/with-error-handler";
 import {
   successResponse,
   errorResponse,
-  unauthorizedResponse,
 } from "@/lib/api-response";
 
-export const GET = withErrorHandler(async () => {
-  const session = await getSession();
+export const GET = requireAuth(
+  withErrorHandler(async () => {
+    const session = (await getSession())!;
 
-  if (!session?.user?.id) {
-    return unauthorizedResponse();
-  }
-
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      emailVerified: true,
-      image: true,
-      phone: true,
-      addresses: {
-        select: {
-          id: true,
-          fullName: true,
-          phone: true,
-          line1: true,
-          city: true,
-          state: true,
-          pincode: true,
-          isDefault: true,
+    const user = await prisma.user.findUnique({
+      where: { id: session!.user.id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        emailVerified: true,
+        image: true,
+        phone: true,
+        addresses: {
+          select: {
+            id: true,
+            fullName: true,
+            phone: true,
+            line1: true,
+            city: true,
+            state: true,
+            pincode: true,
+            isDefault: true,
+          },
+          orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }],
         },
-        orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }],
       },
-    },
-  });
+    });
 
-  if (!user) {
-    return errorResponse("User not found", 404);
-  }
+    if (!user) {
+      return errorResponse("User not found", 404);
+    }
 
-  return successResponse(user);
-});
+    return successResponse(user);
+  }),
+);
 
-export const PUT = withErrorHandler(async (req: Request) => {
-  const session = await getSession();
-
-  if (!session?.user?.id) {
-    return unauthorizedResponse();
-  }
+export const PUT = requireAuth(
+  withErrorHandler(async (req: Request) => {
+    const session = (await getSession())!;
 
   const body = (await req.json()) as {
     name?: string;
@@ -114,4 +109,5 @@ export const PUT = withErrorHandler(async (req: Request) => {
   });
 
   return successResponse(updated);
-});
+  }),
+);

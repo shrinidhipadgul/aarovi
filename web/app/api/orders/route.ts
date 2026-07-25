@@ -1,15 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/get-session";
+import { requireAuth } from "@/lib/api-require-auth";
 import { withErrorHandler } from "@/lib/with-error-handler";
-import { successResponse, unauthorizedResponse } from "@/lib/api-response";
+import { successResponse } from "@/lib/api-response";
 import { statusLabel, statusBadgeColor } from "@/lib/order-status";
 
-export const GET = withErrorHandler(async () => {
-  const session = await getSession();
-
-  if (!session?.user?.id) {
-    return unauthorizedResponse();
-  }
+export const GET = requireAuth(
+  withErrorHandler(async () => {
+    const session = (await getSession())!;
 
   const orders = await prisma.order.findMany({
     where: { userId: session.user.id },
@@ -43,4 +41,5 @@ export const GET = withErrorHandler(async () => {
   }));
 
   return successResponse(enriched);
-});
+  }),
+);

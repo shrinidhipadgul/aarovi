@@ -1,10 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
 import { handleApiError } from "./api-errors";
-
-type RouteHandler = (
-  req: NextRequest,
-  ...args: unknown[]
-) => Promise<NextResponse>;
+import { RouteHandler } from "./route-handler";
 
 export function withErrorHandler(handler: RouteHandler): RouteHandler {
   return async (req, ...args) => {

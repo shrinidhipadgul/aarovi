@@ -1,44 +1,39 @@
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/get-session";
+import { requireAuth } from "@/lib/api-require-auth";
 import { withErrorHandler } from "@/lib/with-error-handler";
 import {
   successResponse,
   errorResponse,
-  unauthorizedResponse,
 } from "@/lib/api-response";
 import { validateAddress } from "@/lib/checkout";
 
-export const GET = withErrorHandler(async () => {
-  const session = await getSession();
+export const GET = requireAuth(
+  withErrorHandler(async () => {
+    const session = (await getSession())!;
 
-  if (!session?.user?.id) {
-    return unauthorizedResponse();
-  }
+    const addresses = await prisma.address.findMany({
+      where: { userId: session!.user.id },
+      orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }],
+      select: {
+        id: true,
+        fullName: true,
+        phone: true,
+        line1: true,
+        city: true,
+        state: true,
+        pincode: true,
+        isDefault: true,
+      },
+    });
 
-  const addresses = await prisma.address.findMany({
-    where: { userId: session.user.id },
-    orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }],
-    select: {
-      id: true,
-      fullName: true,
-      phone: true,
-      line1: true,
-      city: true,
-      state: true,
-      pincode: true,
-      isDefault: true,
-    },
-  });
+    return successResponse(addresses);
+  }),
+);
 
-  return successResponse(addresses);
-});
-
-export const POST = withErrorHandler(async (req: Request) => {
-  const session = await getSession();
-
-  if (!session?.user?.id) {
-    return unauthorizedResponse();
-  }
+export const POST = requireAuth(
+  withErrorHandler(async (req: Request) => {
+    const session = (await getSession())!;
 
   const body = (await req.json()) as {
     fullName?: string;
@@ -92,4 +87,5 @@ export const POST = withErrorHandler(async (req: Request) => {
   });
 
   return successResponse(result, 201);
-});
+  }),
+);

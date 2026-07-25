@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/get-session";
+import { requireAuth } from "@/lib/api-require-auth";
 import { withErrorHandler } from "@/lib/with-error-handler";
-import { successResponse, unauthorizedResponse } from "@/lib/api-response";
+import { successResponse } from "@/lib/api-response";
 
 interface MergeItem {
   productId: string;
@@ -9,12 +10,9 @@ interface MergeItem {
   quantity: number;
 }
 
-export const POST = withErrorHandler(async (req: Request) => {
-  const session = await getSession();
-
-  if (!session?.user?.id) {
-    return unauthorizedResponse();
-  }
+export const POST = requireAuth(
+  withErrorHandler(async (req: Request) => {
+    const session = (await getSession())!;
 
   const { items } = await req.json();
 
@@ -75,4 +73,5 @@ export const POST = withErrorHandler(async (req: Request) => {
   }
 
   return successResponse({ merged });
-});
+  }),
+);

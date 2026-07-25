@@ -1,10 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/get-session";
+import { requireAuth } from "@/lib/api-require-auth";
 import { withErrorHandler } from "@/lib/with-error-handler";
 import {
   successResponse,
   errorResponse,
-  unauthorizedResponse,
 } from "@/lib/api-response";
 import {
   calculateTotals,
@@ -14,12 +14,9 @@ import {
   type AddressInput,
 } from "@/lib/checkout";
 
-export const POST = withErrorHandler(async (req: Request) => {
-  const session = await getSession();
-
-  if (!session?.user?.id) {
-    return unauthorizedResponse();
-  }
+export const POST = requireAuth(
+  withErrorHandler(async (req: Request) => {
+    const session = (await getSession())!;
 
   const body = (await req.json()) as {
     address: AddressInput;
@@ -197,4 +194,5 @@ export const POST = withErrorHandler(async (req: Request) => {
     },
     201,
   );
-});
+  }),
+);

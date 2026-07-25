@@ -1,8 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
 import { isAdmin } from "@/lib/is-admin";
 import { errorResponse, unauthorizedResponse } from "@/lib/api-response";
-
-type RouteHandler = (req: NextRequest, ...args: unknown[]) => Promise<NextResponse>;
+import { RouteHandler } from "./route-handler";
 
 export function requireAdmin(handler: RouteHandler): RouteHandler {
   return async (req, ...args) => {
