@@ -9,15 +9,22 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminDashboardPage() {
-  const [totalProducts, outOfStock, categories] = await Promise.all([
-    prisma.product.count({ where: { deletedAt: null } }),
-    prisma.product.count({ where: { deletedAt: null, inStock: false } }),
-    prisma.category.count(),
-  ]);
+  const [totalProducts, outOfStock, categories, totalOrders, openOrders] =
+    await Promise.all([
+      prisma.product.count({ where: { deletedAt: null } }),
+      prisma.product.count({ where: { deletedAt: null, inStock: false } }),
+      prisma.category.count(),
+      prisma.order.count(),
+      prisma.order.count({
+        where: { status: { notIn: ["delivered", "cancelled"] } },
+      }),
+    ]);
 
   const stats = [
     { label: "Total Products", value: totalProducts },
     { label: "Out of Stock", value: outOfStock },
+    { label: "Total Orders", value: totalOrders },
+    { label: "Open Orders", value: openOrders },
     { label: "Categories", value: categories },
   ];
 
@@ -30,7 +37,7 @@ export default async function AdminDashboardPage() {
         Welcome to your store dashboard.
       </p>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+      <div className="mt-6 grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
         {stats.map((stat) => (
           <div
             key={stat.label}
@@ -57,14 +64,17 @@ export default async function AdminDashboardPage() {
           </p>
         </Link>
 
-        <div className="rounded-xl border border-dashed border-brand-primary/15 bg-brand-bg/50 p-6 opacity-60">
+        <Link
+          href="/admin/orders"
+          className="rounded-xl border border-brand-primary/15 bg-brand-bg p-6 transition-colors hover:border-brand-gold"
+        >
           <h2 className="font-display text-lg font-bold text-brand-primary">
-            Orders (Coming Soon)
+            Orders
           </h2>
           <p className="mt-1 text-sm text-brand-text/60">
-            View and manage orders.
+            {totalOrders} total · {openOrders} open
           </p>
-        </div>
+        </Link>
       </div>
     </div>
   );

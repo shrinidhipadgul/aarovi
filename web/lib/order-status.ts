@@ -47,8 +47,21 @@ export function statusBadgeColor(status: string): string {
   return STATUS_BADGE_COLORS[status] ?? "border-brand-primary/10 bg-brand-bg text-brand-text/60";
 }
 
+export const WRITABLE_STATUSES = [
+  ...ORDER_STATUSES,
+  "cancelled",
+] as const;
+
+export type WritableOrderStatus = (typeof WRITABLE_STATUSES)[number];
+
 export function isOrderStatus(value: string): value is OrderStatus {
   return (ORDER_STATUSES as readonly string[]).includes(value);
+}
+
+export function isWritableOrderStatus(
+  value: string,
+): value is WritableOrderStatus {
+  return (WRITABLE_STATUSES as readonly string[]).includes(value);
 }
 
 export function getTimeline(currentStatus: string): TimelineStep[] {

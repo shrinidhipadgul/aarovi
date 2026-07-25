@@ -6,6 +6,7 @@ import { AdminSignOut } from "@/components/admin/admin-sign-out";
 
 const navItems = [
   { label: "Dashboard", href: "/admin" },
+  { label: "Orders", href: "/admin/orders" },
   { label: "Products", href: "/admin/products" },
 ];
 
