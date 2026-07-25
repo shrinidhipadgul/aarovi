@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/get-session";
 import { requireAuth } from "@/lib/api-require-auth";
@@ -13,6 +14,24 @@ import {
   createRazorpayOrder,
   type AddressInput,
 } from "@/lib/checkout";
+import { fetchOrderForEmail } from "@/lib/queries/orders";
+import { isEmailConfigured, sendOrderConfirmationEmail } from "@/lib/email";
+
+function sendOrderConfirmationAfter(orderId: string) {
+  after(async () => {
+    if (!isEmailConfigured()) return;
+    try {
+      const order = await fetchOrderForEmail(orderId);
+      if (!order?.user?.email) return;
+      await sendOrderConfirmationEmail(order);
+    } catch (e) {
+      console.error("[email] order-confirmation (post-create)", {
+        orderId,
+        error: e,
+      });
+    }
+  });
+}
 
 export const POST = requireAuth(
   withErrorHandler(async (req: Request) => {
@@ -138,6 +157,8 @@ export const POST = requireAuth(
 
       return created;
     });
+
+    sendOrderConfirmationAfter(order.id);
 
     return successResponse({ orderId: order.id, status: "confirmed" }, 201);
   }
