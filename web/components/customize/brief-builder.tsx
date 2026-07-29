@@ -200,7 +200,7 @@ export default function BriefBuilder() {
     }
   };
 
-  const stepGroups = [1, 2, 3, 4, 5, 6, 7]
+  const stepGroups = [1, 2, 3, 4, 5, 6]
     .map((step) => TAXONOMY.filter((g) => g.step === step))
     .filter((g) => g.length > 0);
 
@@ -263,7 +263,7 @@ export default function BriefBuilder() {
                   </div>
                 ))}
 
-                {/* Step 7 extras: Occasion, Budget, Notes, Required by, References */}
+                {/* Step 7: Occasion, Budget, Notes & References */}
                 <div className="space-y-8 rounded-2xl border border-brand-primary/10 bg-white p-6 shadow-sm sm:p-8">
                   <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-brand-gold">
                     N&deg; 07 &mdash; OCCASION &amp; BRIEF
@@ -301,30 +301,14 @@ export default function BriefBuilder() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-                    <div>
-                      <label className="mb-2 block text-sm font-semibold text-brand-text">
-                        Needed By
-                      </label>
-                      <input
-                        type="date"
-                        value={draft.requiredBy ?? ""}
-                        onChange={(e) =>
-                          setRequiredBy(e.target.value || null)
-                        }
-                        className="w-full rounded-lg border border-brand-primary/15 bg-brand-bg px-4 py-2.5 text-sm text-brand-text outline-none transition-colors focus:border-brand-gold"
-                      />
-                    </div>
-
-                    <div>
-                      <p className="mb-2 text-sm font-semibold text-brand-text">
-                        Reference Images
-                      </p>
-                      <p className="mb-3 font-serif text-xs italic text-brand-text/30">
-                        Upload photos, sketches, or inspiration (up to 5).
-                      </p>
-                      <ReferenceUploader references={draft.referenceKeys} />
-                    </div>
+                  <div>
+                    <p className="mb-2 text-sm font-semibold text-brand-text">
+                      Reference Images
+                    </p>
+                    <p className="mb-3 font-serif text-xs italic text-brand-text/30">
+                      Upload photos, sketches, or inspiration (up to 5).
+                    </p>
+                    <ReferenceUploader references={draft.referenceKeys} />
                   </div>
 
                   <div>
