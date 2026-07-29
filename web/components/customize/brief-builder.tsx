@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import {
   customizeDraft,
+  useSyncCustomizeDraft,
   setSelection,
   setColorMatchReference,
   setNotes,
@@ -22,6 +23,7 @@ import MultiSelectChips from "./multi-select-chips";
 import ReferenceUploader from "./reference-uploader";
 
 export default function BriefBuilder() {
+  useSyncCustomizeDraft();
   const router = useRouter();
   const draft = useStore(customizeDraft);
   const [submitting, setSubmitting] = useState(false);

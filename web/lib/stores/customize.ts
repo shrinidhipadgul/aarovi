@@ -1,4 +1,5 @@
 import { atom, computed } from "nanostores";
+import { useEffect } from "react";
 
 const STORAGE_KEY = "aarovi:customize-draft";
 
@@ -24,24 +25,26 @@ function emptyDraft(): CustomizeDraft {
   };
 }
 
-function loadDraft(): CustomizeDraft {
-  if (typeof window === "undefined") return emptyDraft();
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return emptyDraft();
-    const parsed = JSON.parse(raw);
-    return { ...emptyDraft(), ...parsed };
-  } catch {
-    return emptyDraft();
-  }
+export const customizeDraft = atom<CustomizeDraft>(emptyDraft());
+
+export function useSyncCustomizeDraft() {
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        customizeDraft.set({ ...emptyDraft(), ...parsed });
+      }
+    } catch {
+      // ignore JSON parse or localStorage errors
+    }
+  }, []);
 }
 
 function persist(draft: CustomizeDraft) {
   if (typeof window === "undefined") return;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
 }
-
-export const customizeDraft = atom<CustomizeDraft>(loadDraft());
 
 export function setSelection(groupId: string, value: string | string[]) {
   const prev = customizeDraft.get();
