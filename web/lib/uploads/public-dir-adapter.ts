@@ -1,9 +1,7 @@
 import { writeFile, mkdir, unlink } from "node:fs/promises";
 import { join } from "node:path";
+import { ALLOWED_TYPES, MAX_SIZE } from "./constants";
 import type { UploadAdapter } from "./index";
-
-const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/svg+xml"];
-const MAX_SIZE = 5 * 1024 * 1024;
 
 export class PublicDirAdapter implements UploadAdapter {
   private baseDir: string;
@@ -13,7 +11,7 @@ export class PublicDirAdapter implements UploadAdapter {
   }
 
   async save(file: File, fileName: string): Promise<string> {
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    if (!ALLOWED_TYPES.includes(file.type as (typeof ALLOWED_TYPES)[number])) {
       throw new Error(
         `Invalid file type "${file.type}". Allowed: ${ALLOWED_TYPES.join(", ")}`,
       );
@@ -35,7 +33,14 @@ export class PublicDirAdapter implements UploadAdapter {
   }
 
   async delete(path: string): Promise<void> {
-    const fullPath = join(process.cwd(), "public", path);
+    const cleanPath = path.replace(/^\//, "");
+    const fullPath = join(process.cwd(), "public", cleanPath);
     await unlink(fullPath).catch(() => {});
+  }
+
+  getPresignedPutUrl(): never {
+    throw new Error(
+      "Presigned uploads are not supported with the public directory adapter. Set UPLOAD_ADAPTER=s3.",
+    );
   }
 }

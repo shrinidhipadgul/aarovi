@@ -2,26 +2,43 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/api-require-admin";
 import { withErrorHandler } from "@/lib/with-error-handler";
 import { errorResponse } from "@/lib/api-response";
-import { uploadAdapter } from "@/lib/uploads";
+import { getUploadAdapter } from "@/lib/uploads";
+import { extractKey, type PresignedUpload } from "@/lib/uploads/storage";
+
+interface UploadFileEntry {
+  contentType: string;
+  fileName: string;
+}
 
 const handleUpload = async (req: Request) => {
-  const formData = await req.formData();
-  const files = formData.getAll("files") as File[];
+  const body = (await req.json()) as { files?: UploadFileEntry[] };
 
-  if (files.length === 0) {
+  if (!body.files || body.files.length === 0) {
     return errorResponse("No files provided", 400);
   }
 
-  const paths: string[] = [];
+  const adapter = getUploadAdapter();
+  if (!adapter.getPresignedPutUrl) {
+    return errorResponse(
+      "Presigned uploads require the S3 adapter. Set UPLOAD_ADAPTER=s3.",
+      500,
+    );
+  }
+
+  const paths: (PresignedUpload & { error?: string })[] = [];
   const errors: { name: string; error: string }[] = [];
 
-  for (const file of files) {
+  for (const entry of body.files) {
     try {
-      const path = await uploadAdapter.save(file, file.name);
-      paths.push(path);
+      const result = await adapter.getPresignedPutUrl(
+        entry.contentType,
+        "products",
+        entry.fileName,
+      );
+      paths.push(result);
     } catch (err) {
       errors.push({
-        name: file.name,
+        name: entry.fileName,
         error: err instanceof Error ? err.message : "Unknown error",
       });
     }
@@ -39,7 +56,10 @@ const handleDelete = async (req: Request) => {
     return errorResponse("path is required", 400);
   }
 
-  await uploadAdapter.delete(body.path);
+  const adapter = getUploadAdapter();
+  const key = extractKey(body.path) ?? body.path;
+  await adapter.delete(key);
+
   return NextResponse.json({ success: true });
 };
 

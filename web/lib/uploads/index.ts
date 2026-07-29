@@ -1,8 +1,15 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
+import type { PresignedUpload } from "./storage";
 
 export interface UploadAdapter {
   save(file: File, fileName: string): Promise<string>;
   delete(path: string): Promise<void>;
+  getPresignedPutUrl?(
+    contentType: string,
+    namespace: string,
+    fileName: string,
+  ): Promise<PresignedUpload>;
+  objectExists?(key: string): Promise<boolean>;
 }
 
 export type UploadAdapterType = "public" | "s3";
@@ -12,7 +19,8 @@ let cachedAdapter: UploadAdapter | null = null;
 export function getUploadAdapter(type?: UploadAdapterType): UploadAdapter {
   if (cachedAdapter) return cachedAdapter;
 
-  const resolved = type ?? (process.env.UPLOAD_ADAPTER as UploadAdapterType) ?? "public";
+  const resolved =
+    type ?? (process.env.UPLOAD_ADAPTER as UploadAdapterType) ?? "public";
 
   if (resolved === "s3") {
     const { S3Adapter } = require("./s3-adapter") as {

@@ -91,25 +91,72 @@ export function ProductForm({ mode, initialData, productId }: ProductFormProps) 
     setUploading(true);
     setServerError("");
 
+    const fileList = Array.from(files);
+
     try {
-      const body = new FormData();
-      for (const file of Array.from(files)) {
-        body.append("files", file);
+      const presignRes = await fetch("/api/admin/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          files: fileList.map((f) => ({
+            contentType: f.type,
+            fileName: f.name,
+          })),
+        }),
+      });
+
+      const presignJson = await presignRes.json();
+
+      if (!presignJson.success) {
+        setServerError(presignJson.message || "Failed to request upload URLs");
+        return;
       }
 
-      const res = await fetch("/api/admin/upload", { method: "POST", body });
-      const json = await res.json();
+      const presignedFiles = presignJson.data.paths as {
+        key: string;
+        uploadUrl: string;
+        publicUrl: string;
+        error?: string;
+      }[];
 
-      if (json.success && json.data.paths) {
-        set("images", [...form.images, ...json.data.paths]);
+      const uploadedUrls: string[] = [];
+      const errors: string[] = [];
+
+      for (let i = 0; i < fileList.length; i++) {
+        const entry = presignedFiles[i];
+        if (entry?.error) {
+          errors.push(`${fileList[i].name}: ${entry.error}`);
+          continue;
+        }
+        try {
+          const putRes = await fetch(entry.uploadUrl, {
+            method: "PUT",
+            body: fileList[i],
+            headers: { "Content-Type": fileList[i].type },
+          });
+          if (putRes.ok) {
+            uploadedUrls.push(entry.publicUrl);
+          } else {
+            errors.push(`${fileList[i].name}: upload failed (${putRes.status})`);
+          }
+        } catch (err) {
+          errors.push(
+            `${fileList[i].name}: ${err instanceof Error ? err.message : "Upload failed"}`,
+          );
+        }
       }
-      if (json.data.errors && json.data.errors.length > 0) {
-        setServerError(json.data.errors.map((e: { error: string }) => e.error).join(", "));
+
+      if (uploadedUrls.length > 0) {
+        set("images", [...form.images, ...uploadedUrls]);
+      }
+      if (errors.length > 0) {
+        setServerError(errors.join(", "));
       }
     } catch {
       setServerError("Upload failed");
     } finally {
       setUploading(false);
+      e.target.value = "";
     }
   };
 

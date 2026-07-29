@@ -29,7 +29,8 @@ model User {
   orders        Order[]
   cartItems     CartItem[]
   wishlistItems WishlistItem[]
-  addresses     Address[]
+  addresses            Address[]
+  customizationRequests CustomizationRequest[]
 }
 
 model Session {
@@ -176,4 +177,32 @@ model ContactMessage {
   subject   String
   message   String
   createdAt DateTime @default(now())
+}
+
+model CustomizationRequest {
+  id          String                @id @default(cuid())
+  userId      String
+  user        User                  @relation(fields: [userId], references: [id])
+  garment     String
+  spec        Json
+  notes       String?
+  occasion    String?
+  budgetTier  String?
+  requiredBy  DateTime?
+  status      String                @default("SUBMITTED")
+  quotedPrice Float?
+  adminNotes  String?
+  media       CustomizationMedia[]
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  @@index([userId])
+}
+
+model CustomizationMedia {
+  id          String                @id @default(cuid())
+  requestId   String
+  request     CustomizationRequest  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  key         String
+  contentType String
+  createdAt   DateTime              @default(now())
 }

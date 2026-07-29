@@ -74,3 +74,26 @@ export function productJsonLd(
     },
   };
 }
+
+export function bespokeServiceJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    name: "Bespoke Ethnic Wear Customization",
+    provider: {
+      "@type": "ClothingStore",
+      name: "Aarovi",
+    },
+    description:
+      "Commission handcrafted, made-to-order ethnic wear — choose your garment, neckline, sleeves, fabric, embroidery, and occasion.",
+    serviceType: "Bespoke Tailoring & Customization",
+    areaServed: {
+      "@type": "Country",
+      name: "India",
+    },
+    availableChannel: {
+      "@type": "ServiceChannel",
+      serviceUrl: "https://aarovi.in/customize",
+    },
+  };
+}
