@@ -5,6 +5,8 @@ import { statusLabel } from "@/lib/order-status";
 import { OrderConfirmationEmail } from "@/lib/emails/order-confirmation";
 import { OrderStatusUpdateEmail } from "@/lib/emails/order-status-update";
 import { OrderCancellationEmail } from "@/lib/emails/order-cancellation";
+import { CustomizationConfirmationEmail } from "@/lib/emails/customization-confirmation";
+import { CustomizationAdminNotifyEmail } from "@/lib/emails/customization-admin-notify";
 
 export function isEmailConfigured(): boolean {
   return Boolean(process.env.RESEND_API_KEY);
@@ -177,6 +179,54 @@ export async function sendOrderCancellationEmail(
         },
       }))}
       address={parseAddress(order.address)}
+    />,
+  );
+}
+
+function adminEmail(): string {
+  const configured = process.env.ADMIN_NOTIFY_EMAIL;
+  if (configured) return configured;
+
+  const from = process.env.MAIL_FROM_EMAIL ?? "";
+  const match = from.match(/<([^>]+)>/);
+  return match ? match[1] : from || "admin@aarovi.in";
+}
+
+export async function sendCustomizationConfirmationEmail(
+  requestId: string,
+  userEmail: string,
+  garment: string,
+): Promise<SendResult> {
+  const subject = `Your bespoke ${garment} brief is submitted`;
+
+  return sendTemplate(
+    userEmail,
+    subject,
+    <CustomizationConfirmationEmail
+      requestId={requestId}
+      garment={garment}
+    />,
+  );
+}
+
+export async function sendCustomizationAdminNotifyEmail(
+  requestId: string,
+  garment: string,
+  occasion: string | null,
+  budgetTier: string | null,
+  userEmail: string,
+): Promise<SendResult> {
+  const subject = `[Aarovi] New bespoke brief: ${garment} from ${userEmail}`;
+
+  return sendTemplate(
+    adminEmail(),
+    subject,
+    <CustomizationAdminNotifyEmail
+      requestId={requestId}
+      garment={garment}
+      occasion={occasion}
+      budgetTier={budgetTier}
+      userEmail={userEmail}
     />,
   );
 }

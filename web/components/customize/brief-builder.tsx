@@ -76,13 +76,43 @@ export default function BriefBuilder() {
     }
 
     setSubmitting(true);
-    // M5 will wire this: POST /api/customize
-    // For now placeholder
-    setTimeout(() => {
+
+    try {
+      const res = await fetch("/api/customize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          garment: draft.selections.garment ?? "",
+          selections: draft.selections,
+          colorMatchReference: draft.colorMatchReference,
+          notes: draft.notes,
+          occasion: draft.occasion,
+          budgetTier: draft.budgetTier,
+          requiredBy: draft.requiredBy,
+          referenceKeys: draft.referenceKeys,
+        }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        console.error("Customize submit failed", json);
+        setSubmitting(false);
+        return;
+      }
+
+      const requestId = json.data?.id as string;
+      if (requestId) {
+        router.push(`/customize/confirmation?id=${encodeURIComponent(requestId)}`);
+      } else {
+        router.push("/customize/confirmation");
+      }
+    } catch {
+      // stay on page, let user retry
+    } finally {
       setSubmitting(false);
-      router.push("/customize/confirmation");
-    }, 1500);
-  }, [session, router]);
+    }
+  }, [session, router, draft]);
 
   const renderGroup = (group: CustomizeGroup) => {
     const selected = getSelected(group.id);

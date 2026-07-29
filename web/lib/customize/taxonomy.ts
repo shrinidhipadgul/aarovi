@@ -20,6 +20,7 @@ export interface CustomizeSpec {
   occasion: string;
   budgetTier: string;
   requiredBy: string | null;
+  referenceKeys: string[];
 }
 
 export const TAXONOMY: CustomizeGroup[] = [

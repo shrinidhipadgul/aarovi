@@ -7,7 +7,13 @@ export const metadata: Metadata = {
     "Your bespoke customization brief has been submitted. We will review it and get back to you within 48 hours.",
 };
 
-export default function ConfirmationPage() {
+export default async function ConfirmationPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ id?: string }>;
+}) {
+  const { id } = await searchParams;
+
   return (
     <section className="flex min-h-[80vh] items-center justify-center bg-brand-ivory texture-weave px-4 py-28 sm:px-6">
       <div className="mx-auto max-w-lg text-center">
@@ -18,10 +24,15 @@ export default function ConfirmationPage() {
           Thank you for your brief.
         </h1>
         <p className="mx-auto mt-6 max-w-sm font-serif text-lg italic leading-relaxed text-brand-text/60">
-          Our atelier will review your selections and respond within 48
-          hours with a quote and lead time.
+          Our atelier will review your selections and respond within 48 hours
+          with a quote and lead time.
         </p>
-        <p className="mt-4 font-mono text-xs uppercase tracking-[0.2em] text-brand-text/30">
+        {id && (
+          <p className="mt-4 font-mono text-xs uppercase tracking-[0.2em] text-brand-gold">
+            Brief ID &mdash; {id}
+          </p>
+        )}
+        <p className="mt-3 font-mono text-xs uppercase tracking-[0.2em] text-brand-text/30">
           You&rsquo;ll receive a confirmation by email shortly.
         </p>
         <Link
