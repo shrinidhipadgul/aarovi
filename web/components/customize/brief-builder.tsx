@@ -15,7 +15,6 @@ import {
 } from "@/lib/stores/customize";
 import { TAXONOMY, type CustomizeGroup } from "@/lib/customize/taxonomy";
 import { getNecklineArt, getSleeveArt } from "./line-art";
-import CustomizeHero from "./customize-hero";
 import BriefSummary from "./brief-summary";
 import OptionGrid from "./option-grid";
 import SwatchGrid from "./swatch-grid";
@@ -204,12 +203,10 @@ export default function BriefBuilder() {
     .filter((g) => g.length > 0);
 
   return (
-    <>
-      <CustomizeHero />
-      <div
-        id="brief-builder"
-        className="bg-brand-ivory texture-weave px-4 py-20 sm:px-6 sm:py-28 lg:px-8"
-      >
+    <div
+      id="brief-builder"
+      className="bg-brand-ivory texture-weave px-4 py-20 sm:px-6 sm:py-28 lg:px-8"
+    >
         <div className="mx-auto max-w-7xl">
           <div className="lg:grid lg:grid-cols-12 lg:gap-16">
             {/* Right: step stack (rendered first on mobile, second on lg) */}
@@ -351,6 +348,5 @@ export default function BriefBuilder() {
           </div>
         </div>
       </div>
-    </>
   );
 }
