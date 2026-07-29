@@ -34,7 +34,7 @@ export default function BriefSummary({
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <p className="font-mono text-[11px] uppercase tracking-[0.35em] text-brand-gold">
+        <p className="font-mono text-xs uppercase tracking-[0.25em] font-semibold text-brand-primary">
           Your Brief
         </p>
       </div>
@@ -55,11 +55,11 @@ export default function BriefSummary({
             if (Array.isArray(val) && val.length === 0) return null;
 
             return (
-              <li key={key("summary", group.id)} className="flex justify-between gap-2">
-                <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-brand-text/40">
+              <li key={key("summary", group.id)} className="flex justify-between gap-2 border-b border-brand-primary/5 pb-1.5">
+                <span className="font-mono text-xs font-medium uppercase tracking-[0.12em] text-brand-text/75">
                   {group.label}
                 </span>
-                <span className="text-right text-sm text-brand-text">
+                <span className="text-right text-sm font-medium text-brand-text">
                   {Array.isArray(val)
                     ? val.map((v) => getOptionLabel(group.id, v)).join(", ")
                     : getOptionLabel(group.id, val)}
@@ -71,27 +71,27 @@ export default function BriefSummary({
       </AnimatePresence>
 
       {draft.colorMatchReference && (
-        <p className="font-serif text-xs italic text-brand-gold">
+        <p className="font-serif text-xs italic font-medium text-brand-primary">
           Colour matched to your reference
         </p>
       )}
 
       <div className="space-y-1.5">
         {draft.occasion && (
-          <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-brand-text/60">
-            {getOptionLabel("occasion", draft.occasion)}
+          <p className="font-mono text-xs font-semibold uppercase tracking-[0.12em] text-brand-primary">
+            Occasion: <span className="font-sans text-sm font-medium text-brand-text">{getOptionLabel("occasion", draft.occasion)}</span>
           </p>
         )}
         {draft.budgetTier && (
-          <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-brand-text/60">
-            {getOptionLabel("budget", draft.budgetTier)}
+          <p className="font-mono text-xs font-semibold uppercase tracking-[0.12em] text-brand-primary">
+            Budget: <span className="font-sans text-sm font-medium text-brand-text">{getOptionLabel("budget", draft.budgetTier)}</span>
           </p>
         )}
       </div>
 
       {draft.referenceKeys.length > 0 && (
         <div className="space-y-2">
-          <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-brand-text/40">
+          <p className="font-mono text-xs font-medium uppercase tracking-[0.12em] text-brand-text/75">
             References ({draft.referenceKeys.length})
           </p>
           <div className="flex gap-1.5">
@@ -108,7 +108,7 @@ export default function BriefSummary({
               </div>
             ))}
             {draft.referenceKeys.length > 4 && (
-              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md border border-brand-primary/10 bg-brand-parchment font-mono text-[10px] text-brand-text/40">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md border border-brand-primary/10 bg-brand-parchment font-mono text-[10px] font-semibold text-brand-text/70">
                 +{draft.referenceKeys.length - 4}
               </div>
             )}
@@ -117,7 +117,7 @@ export default function BriefSummary({
       )}
 
       <div className="space-y-2">
-        <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-brand-text/40">
+        <p className="font-mono text-xs font-medium uppercase tracking-[0.12em] text-brand-text/75">
           Progress
         </p>
         <div className="flex gap-1">
@@ -126,8 +126,8 @@ export default function BriefSummary({
             return (
               <div
                 key={i}
-                className={`h-1 flex-1 rounded-full transition-colors ${
-                  done ? "bg-brand-gold" : "bg-brand-primary/10"
+                className={`h-1.5 flex-1 rounded-full transition-colors ${
+                  done ? "bg-brand-primary" : "bg-brand-primary/15"
                 }`}
               />
             );
@@ -143,7 +143,7 @@ export default function BriefSummary({
         {submitting ? "Submitting…" : "Submit Quote Request"}
       </button>
 
-      <p className="text-center font-serif text-xs italic text-brand-text/30">
+      <p className="text-center font-serif text-xs italic text-brand-text/65">
         We&rsquo;ll review your brief and respond within 48 hours
       </p>
     </div>
