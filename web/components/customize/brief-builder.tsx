@@ -210,14 +210,19 @@ export default function BriefBuilder() {
       className="bg-brand-ivory texture-weave px-4 py-20 sm:px-6 sm:py-28 lg:px-8"
     >
         <div className="mx-auto max-w-7xl">
-          <div className="lg:grid lg:grid-cols-12 lg:gap-16">
-            {/* Right: step stack (rendered first on mobile, second on lg) */}
-            <div className="order-1 lg:order-2 lg:col-span-7 lg:col-start-6">
+          <div className="flex flex-col items-center">
+            {/* Steps & Options Container */}
+            <div className="w-full max-w-5xl">
               <div className="space-y-16">
                 {stepGroups.map((groups, stepIdx) => (
-                  <div key={stepIdx} className="space-y-10">
+                  <div
+                    key={stepIdx}
+                    className={`grid gap-8 ${
+                      groups.length > 1 ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1"
+                    }`}
+                  >
                     {groups.map((group) => (
-                      <div key={group.id}>
+                      <div key={group.id} className="flex flex-col">
                         <div className="mb-4 flex items-baseline justify-between">
                           <div>
                             <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-brand-gold">
@@ -232,7 +237,7 @@ export default function BriefBuilder() {
                           </div>
                         </div>
 
-                        <div className="rounded-2xl border border-brand-primary/10 bg-white p-6 shadow-sm">
+                        <div className="flex-1 rounded-2xl border border-brand-primary/10 bg-white p-6 shadow-sm">
                           {renderGroup(group)}
 
                           {group.id === "fabric" && (
@@ -259,53 +264,67 @@ export default function BriefBuilder() {
                 ))}
 
                 {/* Step 7 extras: Occasion, Budget, Notes, Required by, References */}
-                <div className="space-y-6 rounded-2xl border border-brand-primary/10 bg-white p-6 shadow-sm">
+                <div className="space-y-8 rounded-2xl border border-brand-primary/10 bg-white p-6 shadow-sm sm:p-8">
                   <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-brand-gold">
                     N&deg; 07 &mdash; OCCASION &amp; BRIEF
                   </p>
 
-                  <div>
-                    <p className="mb-2 text-sm font-semibold text-brand-text">
-                      Occasion
-                    </p>
-                    <OptionGrid
-                      options={
-                        TAXONOMY.find((g) => g.id === "occasion")?.options ?? []
-                      }
-                      selected={draft.occasion}
-                      onSelect={(v) =>
-                        setOccasion(draft.occasion === v ? "" : v)
-                      }
-                    />
+                  <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+                    <div>
+                      <p className="mb-2 text-sm font-semibold text-brand-text">
+                        Occasion
+                      </p>
+                      <OptionGrid
+                        options={
+                          TAXONOMY.find((g) => g.id === "occasion")?.options ?? []
+                        }
+                        selected={draft.occasion}
+                        onSelect={(v) =>
+                          setOccasion(draft.occasion === v ? "" : v)
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <p className="mb-2 text-sm font-semibold text-brand-text">
+                        Budget Preference
+                      </p>
+                      <OptionGrid
+                        options={
+                          TAXONOMY.find((g) => g.id === "budget")?.options ?? []
+                        }
+                        selected={draft.budgetTier}
+                        onSelect={(v) =>
+                          setBudgetTier(draft.budgetTier === v ? "" : v)
+                        }
+                      />
+                    </div>
                   </div>
 
-                  <div>
-                    <p className="mb-2 text-sm font-semibold text-brand-text">
-                      Budget Preference
-                    </p>
-                    <OptionGrid
-                      options={
-                        TAXONOMY.find((g) => g.id === "budget")?.options ?? []
-                      }
-                      selected={draft.budgetTier}
-                      onSelect={(v) =>
-                        setBudgetTier(draft.budgetTier === v ? "" : v)
-                      }
-                    />
-                  </div>
+                  <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+                    <div>
+                      <label className="mb-2 block text-sm font-semibold text-brand-text">
+                        Needed By
+                      </label>
+                      <input
+                        type="date"
+                        value={draft.requiredBy ?? ""}
+                        onChange={(e) =>
+                          setRequiredBy(e.target.value || null)
+                        }
+                        className="w-full rounded-lg border border-brand-primary/15 bg-brand-bg px-4 py-2.5 text-sm text-brand-text outline-none transition-colors focus:border-brand-gold"
+                      />
+                    </div>
 
-                  <div>
-                    <label className="mb-2 block text-sm font-semibold text-brand-text">
-                      Needed By
-                    </label>
-                    <input
-                      type="date"
-                      value={draft.requiredBy ?? ""}
-                      onChange={(e) =>
-                        setRequiredBy(e.target.value || null)
-                      }
-                      className="w-full rounded-lg border border-brand-primary/15 bg-brand-bg px-4 py-2.5 text-sm text-brand-text outline-none transition-colors focus:border-brand-gold"
-                    />
+                    <div>
+                      <p className="mb-2 text-sm font-semibold text-brand-text">
+                        Reference Images
+                      </p>
+                      <p className="mb-3 font-serif text-xs italic text-brand-text/30">
+                        Upload photos, sketches, or inspiration (up to 5).
+                      </p>
+                      <ReferenceUploader references={draft.referenceKeys} />
+                    </div>
                   </div>
 
                   <div>
@@ -320,31 +339,14 @@ export default function BriefBuilder() {
                       className="w-full rounded-lg border border-brand-primary/15 bg-brand-bg px-4 py-2.5 font-serif text-sm italic text-brand-text outline-none transition-colors placeholder:text-brand-text/20 focus:border-brand-gold"
                     />
                   </div>
-
-                  <div>
-                    <p className="mb-2 text-sm font-semibold text-brand-text">
-                      Reference Images
-                    </p>
-                    <p className="mb-3 font-serif text-xs italic text-brand-text/30">
-                      Upload photos, sketches, or inspiration (up to 5).
-                    </p>
-                    <ReferenceUploader references={draft.referenceKeys} />
-                  </div>
                 </div>
 
-                {/* Mobile submit (lg hides the sticky panel) */}
-                <div className="lg:hidden">
+                {/* Brief Summary centered at the bottom of options */}
+                <div className="mx-auto max-w-2xl pt-6">
                   <BriefSummary onSubmit={handleSubmit} submitting={submitting} />
                 </div>
 
-                <div className="h-16" />
-              </div>
-            </div>
-
-            {/* Left: sticky summary (lg only) */}
-            <div className="order-2 hidden lg:col-span-4 lg:col-start-1 lg:block">
-              <div className="sticky top-28">
-                <BriefSummary onSubmit={handleSubmit} submitting={submitting} />
+                <div className="h-12" />
               </div>
             </div>
           </div>
