@@ -224,6 +224,11 @@ export function isValidSelection(
     if (group.kind !== "multi") return false;
     return value.every((v) => validValues.includes(v));
   }
+
+  if (groupId === "color" && typeof value === "string" && /^#([0-9A-Fa-f]{3}){1,2}$/.test(value)) {
+    return true;
+  }
+
   return validValues.includes(value);
 }
 

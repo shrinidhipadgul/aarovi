@@ -27,6 +27,7 @@ export default function BriefBuilder() {
   const router = useRouter();
   const draft = useStore(customizeDraft);
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const { data: session } = authClient.useSession();
 
@@ -77,6 +78,7 @@ export default function BriefBuilder() {
     }
 
     setSubmitting(true);
+    setSubmitError(null);
 
     try {
       const res = await fetch("/api/customize", {
@@ -84,32 +86,40 @@ export default function BriefBuilder() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           garment: draft.selections.garment ?? "",
-          selections: draft.selections,
-          colorMatchReference: draft.colorMatchReference,
-          notes: draft.notes,
-          occasion: draft.occasion,
-          budgetTier: draft.budgetTier,
-          requiredBy: draft.requiredBy,
-          referenceKeys: draft.referenceKeys,
+          selections: draft.selections ?? {},
+          colorMatchReference: draft.colorMatchReference ?? false,
+          notes: draft.notes ?? "",
+          occasion: draft.occasion ?? "",
+          budgetTier: draft.budgetTier ?? "",
+          requiredBy: draft.requiredBy ?? null,
+          referenceKeys: Array.isArray(draft.referenceKeys) ? draft.referenceKeys : [],
         }),
       });
 
-      const json = await res.json();
+      const json = await res.json().catch(() => null);
 
       if (!res.ok) {
-        console.error("Customize submit failed", json);
-        setSubmitting(false);
+        let msg = json?.message || `Submission failed with status ${res.status}`;
+        if (json?.errors) {
+          const errMsgs = Object.values(json.errors).flat() as string[];
+          if (errMsgs.length > 0) {
+            msg = errMsgs.join(". ");
+          }
+        }
+        setSubmitError(msg);
+        console.error("Customize submit failed:", res.status, json);
         return;
       }
 
-      const requestId = json.data?.id as string;
+      const requestId = json?.data?.id as string;
       if (requestId) {
         router.push(`/customize/confirmation?id=${encodeURIComponent(requestId)}`);
       } else {
         router.push("/customize/confirmation");
       }
-    } catch {
-      // stay on page, let user retry
+    } catch (err) {
+      console.error("Customize submit network/unexpected error:", err);
+      setSubmitError("An unexpected error occurred. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -385,7 +395,11 @@ export default function BriefBuilder() {
 
                 {/* Brief Summary centered at the bottom of options */}
                 <div className="mx-auto max-w-2xl pt-6">
-                  <BriefSummary onSubmit={handleSubmit} submitting={submitting} />
+                  <BriefSummary
+                    onSubmit={handleSubmit}
+                    submitting={submitting}
+                    error={submitError}
+                  />
                 </div>
 
                 <div className="h-12" />

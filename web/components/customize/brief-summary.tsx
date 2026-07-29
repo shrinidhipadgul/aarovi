@@ -18,11 +18,13 @@ function key(prefix: string, id: string): string {
 interface BriefSummaryProps {
   onSubmit: () => void;
   submitting: boolean;
+  error?: string | null;
 }
 
 export default function BriefSummary({
   onSubmit,
   submitting,
+  error,
 }: BriefSummaryProps) {
   const draft = useStore(customizeDraft);
   const completed = useStore(completedSteps);
@@ -134,6 +136,13 @@ export default function BriefSummary({
           })}
         </div>
       </div>
+
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700">
+          <p className="font-semibold">Submission error:</p>
+          <p className="mt-0.5">{error}</p>
+        </div>
+      )}
 
       <button
         onClick={onSubmit}

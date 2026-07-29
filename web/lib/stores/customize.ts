@@ -33,7 +33,15 @@ export function useSyncCustomizeDraft() {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        customizeDraft.set({ ...emptyDraft(), ...parsed });
+        customizeDraft.set({
+          selections: parsed.selections ?? {},
+          colorMatchReference: Boolean(parsed.colorMatchReference),
+          notes: typeof parsed.notes === "string" ? parsed.notes : "",
+          occasion: typeof parsed.occasion === "string" ? parsed.occasion : "",
+          budgetTier: typeof parsed.budgetTier === "string" ? parsed.budgetTier : "",
+          requiredBy: typeof parsed.requiredBy === "string" ? parsed.requiredBy : null,
+          referenceKeys: Array.isArray(parsed.referenceKeys) ? parsed.referenceKeys : [],
+        });
       }
     } catch {
       // ignore JSON parse or localStorage errors
