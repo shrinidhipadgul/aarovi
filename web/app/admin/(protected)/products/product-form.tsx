@@ -140,8 +140,10 @@ export function ProductForm({ mode, initialData, productId }: ProductFormProps) 
             errors.push(`${fileList[i].name}: upload failed (${putRes.status})`);
           }
         } catch (err) {
+          const msg = err instanceof Error ? err.message : "Upload failed";
+          const isCors = msg.includes("Load failed") || msg.includes("Failed to fetch");
           errors.push(
-            `${fileList[i].name}: ${err instanceof Error ? err.message : "Upload failed"}`,
+            `${fileList[i].name}: ${isCors ? "CORS or Network error (check S3 CORS settings)" : msg}`,
           );
         }
       }

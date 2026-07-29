@@ -9,6 +9,7 @@ export interface UploadAdapter {
     namespace: string,
     fileName: string,
   ): Promise<PresignedUpload>;
+  getPresignedGetUrl?(key: string): Promise<string>;
   objectExists?(key: string): Promise<boolean>;
 }
 

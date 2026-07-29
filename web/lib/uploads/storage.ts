@@ -5,14 +5,22 @@ export interface PresignedUpload {
 }
 
 export function getPublicUrl(key: string): string {
-  const base = process.env.S3_PUBLIC_BASE_URL;
+  if (!key) return "";
+  if (
+    key.startsWith("http://") ||
+    key.startsWith("https://") ||
+    key.startsWith("blob:") ||
+    key.startsWith("/")
+  ) {
+    return key;
+  }
+  const base =
+    process.env.NEXT_PUBLIC_S3_PUBLIC_BASE_URL ?? process.env.S3_PUBLIC_BASE_URL;
   if (base) {
     const cleanBase = base.replace(/\/+$/, "");
     return `${cleanBase}/${key}`;
   }
-  const region = process.env.AWS_REGION ?? "us-east-1";
-  const bucket = process.env.S3_BUCKET_NAME ?? "aarovi";
-  return `https://${bucket}.s3.${region}.amazonaws.com/${key}`;
+  return `/api/uploads/file?key=${encodeURIComponent(key)}`;
 }
 
 export function extractKey(url?: string): string | null {

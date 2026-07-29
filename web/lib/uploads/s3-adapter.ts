@@ -1,6 +1,7 @@
 import {
   S3Client,
   PutObjectCommand,
+  GetObjectCommand,
   DeleteObjectCommand,
   HeadObjectCommand,
 } from "@aws-sdk/client-s3";
@@ -87,7 +88,6 @@ export class S3Adapter implements UploadAdapter {
       Bucket: this.bucket,
       Key: key,
       ContentType: contentType,
-      CacheControl: DEFAULT_CACHE_CONTROL,
     });
 
     const ttl = Number(process.env.S3_PRESIGN_TTL_SECONDS) || 180;
@@ -97,6 +97,15 @@ export class S3Adapter implements UploadAdapter {
 
     const publicUrl = getPublicUrl(key);
     return { key, uploadUrl, publicUrl };
+  }
+
+  async getPresignedGetUrl(key: string): Promise<string> {
+    const cleanKey = this.extractKeyFromUrl(key);
+    const command = new GetObjectCommand({
+      Bucket: this.bucket,
+      Key: cleanKey,
+    });
+    return getSignedUrl(this.client, command, { expiresIn: 3600 });
   }
 
   async objectExists(key: string): Promise<boolean> {

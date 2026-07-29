@@ -14,6 +14,7 @@ interface ReferenceUploaderProps {
 export default function ReferenceUploader({ references }: ReferenceUploaderProps) {
   const [uploading, setUploading] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
+  const [previewMap, setPreviewMap] = useState<Record<string, string>>({});
   const inputRef = useRef<HTMLInputElement>(null);
   const dropRef = useRef<HTMLDivElement>(null);
   const [dragover, setDragover] = useState(false);
@@ -46,7 +47,10 @@ export default function ReferenceUploader({ references }: ReferenceUploaderProps
 
         const presignJson = await presignRes.json();
         if (!presignJson.success) {
-          setErrors((prev) => [...prev, `${file.name}: failed to get upload URL`]);
+          setErrors((prev) => [
+            ...prev,
+            `${file.name}: ${presignJson.message || "failed to get upload URL"}`,
+          ]);
           return;
         }
 
@@ -67,11 +71,15 @@ export default function ReferenceUploader({ references }: ReferenceUploaderProps
           return;
         }
 
+        const localUrl = URL.createObjectURL(file);
+        setPreviewMap((prev) => ({ ...prev, [key]: localUrl }));
         addReferenceKey(key);
       } catch (err) {
+        const msg = err instanceof Error ? err.message : "Upload failed";
+        const isCors = msg.includes("Load failed") || msg.includes("Failed to fetch");
         setErrors((prev) => [
           ...prev,
-          `${file.name}: ${err instanceof Error ? err.message : "Upload failed"}`,
+          `${file.name}: ${isCors ? "CORS or Network error (check AWS S3 CORS settings)" : msg}`,
         ]);
       } finally {
         setUploading(false);
@@ -161,7 +169,7 @@ export default function ReferenceUploader({ references }: ReferenceUploaderProps
       {references.length > 0 && (
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
           {references.map((key) => {
-            const url = getPublicUrl(key);
+            const url = previewMap[key] || getPublicUrl(key);
             return (
               <div
                 key={key}
