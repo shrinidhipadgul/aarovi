@@ -7,6 +7,8 @@ import { OrderStatusUpdateEmail } from "@/lib/emails/order-status-update";
 import { OrderCancellationEmail } from "@/lib/emails/order-cancellation";
 import { CustomizationConfirmationEmail } from "@/lib/emails/customization-confirmation";
 import { CustomizationAdminNotifyEmail } from "@/lib/emails/customization-admin-notify";
+import { CustomizationStatusUpdateEmail } from "@/lib/emails/customization-status-update";
+import { statusLabel as customizationStatusLabel } from "@/lib/customize/status";
 
 export function isEmailConfigured(): boolean {
   return Boolean(process.env.RESEND_API_KEY);
@@ -227,6 +229,26 @@ export async function sendCustomizationAdminNotifyEmail(
       occasion={occasion}
       budgetTier={budgetTier}
       userEmail={userEmail}
+    />,
+  );
+}
+
+export async function sendCustomizationStatusUpdateEmail(
+  requestId: string,
+  userEmail: string,
+  garment: string,
+  newStatus: string,
+): Promise<SendResult> {
+  const label = customizationStatusLabel(newStatus);
+  const subject = `Your bespoke ${garment} brief is now: ${label}`;
+
+  return sendTemplate(
+    userEmail,
+    subject,
+    <CustomizationStatusUpdateEmail
+      requestId={requestId}
+      garment={garment}
+      statusLabel={label}
     />,
   );
 }
