@@ -207,7 +207,9 @@ export function getOptionLabel(groupId: string, value: string): string {
   const group = getGroup(groupId);
   if (!group) return value;
   const option = group.options.find((o) => o.value === value);
-  return option?.label ?? value;
+  if (option) return option.label;
+  if (value.startsWith("#")) return `Custom (${value.toUpperCase()})`;
+  return value;
 }
 
 export function isValidSelection(

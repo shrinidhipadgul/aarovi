@@ -147,8 +147,11 @@ export default function BriefBuilder() {
             </p>
           );
         }
+        const isCustom = Boolean(selected && selected.startsWith("#"));
+        const customHex = isCustom ? selected! : "#e1a95f";
+
         return (
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             {group.options.map((opt) => {
               const hex = (opt.meta?.hex as string) ?? "#ccc";
               const active = selected === opt.value;
@@ -157,7 +160,7 @@ export default function BriefBuilder() {
                   key={opt.value}
                   type="button"
                   onClick={() => handleSingleSelect(group.id, opt.value)}
-                  className={`flex flex-col items-center gap-2 transition-all active:scale-[0.97]`}
+                  className="flex flex-col items-center gap-2 transition-all active:scale-[0.97]"
                 >
                   <div
                     className={`h-10 w-10 rounded-full border-2 transition-all ${
@@ -178,6 +181,61 @@ export default function BriefBuilder() {
                 </button>
               );
             })}
+
+            {/* Custom Color Selector (Luxury Spectrum Wheel) */}
+            <label className="group/color relative flex flex-col items-center gap-2 cursor-pointer transition-all active:scale-[0.96]">
+              <input
+                type="color"
+                value={customHex}
+                onChange={(e) => handleSingleSelect(group.id, e.target.value)}
+                className="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10"
+              />
+              <div
+                className={`relative flex h-10 w-10 items-center justify-center rounded-full border-2 overflow-hidden transition-all duration-300 shadow-sm ${
+                  isCustom
+                    ? "border-brand-primary ring-2 ring-brand-primary/20 scale-110"
+                    : "border-brand-primary/20 group-hover/color:border-brand-gold group-hover/color:shadow-md"
+                }`}
+                style={{
+                  backgroundColor: isCustom ? customHex : "transparent",
+                }}
+                title="Custom Color Picker"
+              >
+                {!isCustom && (
+                  <>
+                    <div
+                      className="absolute -inset-2 rounded-full transition-transform duration-300 scale-125 group-hover/color:scale-150"
+                      style={{
+                        background:
+                          "conic-gradient(from 0deg, #E8B4B8, #D4A017, #2A6F40, #1B2A4A, #6B2D5C, #D87093, #E8B4B8)",
+                      }}
+                    />
+                    <div className="relative z-10 flex h-5 w-5 items-center justify-center rounded-full bg-brand-primary/80 backdrop-blur-[2px] shadow-sm transition-transform duration-300 group-hover/color:scale-110">
+                      <svg
+                        className="h-3 w-3 text-brand-ivory"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M12 4.5v15m7.5-7.5h-15"
+                        />
+                      </svg>
+                    </div>
+                  </>
+                )}
+              </div>
+              <span
+                className={`text-[10px] font-medium uppercase tracking-[0.1em] transition-colors ${
+                  isCustom ? "text-brand-primary font-semibold" : "text-brand-text/50 group-hover/color:text-brand-primary"
+                }`}
+              >
+                {isCustom ? customHex.toUpperCase() : "Custom"}
+              </span>
+            </label>
           </div>
         );
       }
