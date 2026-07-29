@@ -298,7 +298,7 @@ export default function BriefBuilder() {
                         <div className="flex-1 rounded-2xl border border-brand-primary/10 bg-white p-6 shadow-sm">
                           {renderGroup(group)}
 
-                          {group.id === "fabric" && (
+                          {group.id === "color" && (
                             <div className="mt-4 border-t border-brand-primary/5 pt-4">
                               <label className="flex cursor-pointer items-center gap-3">
                                 <input
