@@ -35,13 +35,22 @@ export default async function ConfirmationPage({
         <p className="mt-3 font-mono text-xs uppercase tracking-[0.2em] text-brand-text/30">
           You&rsquo;ll receive a confirmation by email shortly.
         </p>
-        <Link
-          href="/"
-          className="mt-10 inline-flex h-12 items-center gap-2 rounded-full bg-brand-primary px-9 font-mono text-xs font-medium uppercase tracking-[0.2em] text-white transition-colors duration-300 hover:bg-brand-primary/90"
-        >
-          Back to Home
-        </Link>
+        <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+          <Link
+            href={id ? `/orders?tab=customize&id=${encodeURIComponent(id)}` : "/orders?tab=customize"}
+            className="inline-flex h-12 items-center gap-2 rounded-full bg-brand-primary px-8 font-mono text-xs font-medium uppercase tracking-[0.2em] text-white transition-colors duration-300 hover:bg-brand-primary/90"
+          >
+            Track in My Orders &rarr;
+          </Link>
+          <Link
+            href="/"
+            className="inline-flex h-12 items-center gap-2 rounded-full border border-brand-primary/20 bg-transparent px-8 font-mono text-xs font-medium uppercase tracking-[0.2em] text-brand-primary transition-colors duration-300 hover:bg-brand-primary/5"
+          >
+            Back to Home
+          </Link>
+        </div>
       </div>
     </section>
   );
 }
+

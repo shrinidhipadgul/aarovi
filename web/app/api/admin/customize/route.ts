@@ -22,7 +22,7 @@ const handleList = async (req: Request) => {
   const [total, requests] = await Promise.all([
     prisma.customizationRequest.count({ where }),
     prisma.customizationRequest.findMany({
-      where,
+      where,  
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * limit,
       take: limit,

@@ -3,7 +3,7 @@ import { requireAuth } from "@/lib/api-require-auth";
 import { withErrorHandler } from "@/lib/with-error-handler";
 import { getSession } from "@/lib/get-session";
 import { successResponse, errorResponse, notFoundResponse } from "@/lib/api-response";
-import { statusLabel } from "@/lib/customize/status";
+import { statusLabel, statusBadgeColor } from "@/lib/customize/status";
 import { getOptionLabel } from "@/lib/customize/taxonomy";
 import { getPublicUrl } from "@/lib/uploads/storage";
 import type { NextRequest } from "next/server";
@@ -55,6 +55,7 @@ const handleDetail = async (_req: NextRequest, ctx: DetailParams) => {
   return successResponse({
     id: request.id,
     garment,
+    rawGarment: request.garment,
     spec: {
       selections: resolvedSelections,
       colorMatchReference: spec?.colorMatchReference ?? false,
@@ -67,7 +68,9 @@ const handleDetail = async (_req: NextRequest, ctx: DetailParams) => {
       ? getOptionLabel("budget", request.budgetTier) ?? request.budgetTier
       : null,
     requiredBy: request.requiredBy?.toISOString() ?? null,
-    status: statusLabel(request.status),
+    statusLabel: statusLabel(request.status),
+    rawStatus: request.status,
+    badgeColor: statusBadgeColor(request.status),
     quotedPrice: request.quotedPrice,
     adminNotes: request.adminNotes,
     media: request.media.map((m) => ({
@@ -82,3 +85,4 @@ const handleDetail = async (_req: NextRequest, ctx: DetailParams) => {
 };
 
 export const GET = requireAuth(withErrorHandler(handleDetail));
+

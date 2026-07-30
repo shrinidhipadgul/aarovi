@@ -13,7 +13,9 @@ import {
   REQUIRED_GROUPS,
   type CustomizeSpec,
 } from "@/lib/customize/taxonomy";
-import { statusLabel } from "@/lib/customize/status";
+import { statusLabel, statusBadgeColor } from "@/lib/customize/status";
+import { getOptionLabel } from "@/lib/customize/taxonomy";
+import { getPublicUrl } from "@/lib/uploads/storage";
 import {
   isEmailConfigured,
   sendCustomizationConfirmationEmail,
@@ -189,29 +191,47 @@ const handleList = async () => {
   const requests = await prisma.customizationRequest.findMany({
     where: { userId },
     orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      garment: true,
-      status: true,
-      occasion: true,
-      budgetTier: true,
-      createdAt: true,
-      _count: { select: { media: true } },
+    include: {
+      media: {
+        take: 1,
+        orderBy: { createdAt: "asc" },
+      },
     },
   });
 
-  const result = requests.map((r) => ({
-    id: r.id,
-    garment: r.garment,
-    status: statusLabel(r.status),
-    occasion: r.occasion,
-    budgetTier: r.budgetTier,
-    createdAt: r.createdAt.toISOString(),
-    mediaCount: r._count.media,
-  }));
+  const result = requests.map((r) => {
+    const garmentLabel = getOptionLabel("garment", r.garment) ?? r.garment;
+    const occasionLabel = r.occasion
+      ? getOptionLabel("occasion", r.occasion) ?? r.occasion
+      : null;
+    const budgetLabel = r.budgetTier
+      ? getOptionLabel("budget", r.budgetTier) ?? r.budgetTier
+      : null;
+
+    const previewMediaUrl = r.media.length > 0 ? getPublicUrl(r.media[0].key) : null;
+
+    return {
+      id: r.id,
+      garment: garmentLabel,
+      rawGarment: r.garment,
+      statusLabel: statusLabel(r.status),
+      rawStatus: r.status,
+      badgeColor: statusBadgeColor(r.status),
+      occasion: occasionLabel,
+      budgetTier: budgetLabel,
+      quotedPrice: r.quotedPrice,
+      notes: r.notes,
+      requiredBy: r.requiredBy ? r.requiredBy.toISOString() : null,
+      createdAt: r.createdAt.toISOString(),
+      updatedAt: r.updatedAt.toISOString(),
+      mediaCount: r.media.length,
+      previewMediaUrl,
+    };
+  });
 
   return successResponse(result);
 };
 
 export const POST = requireAuth(withErrorHandler(handleCreate));
 export const GET = requireAuth(withErrorHandler(handleList));
+
