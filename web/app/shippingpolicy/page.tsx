@@ -33,8 +33,8 @@ const sections = [
     content: (
       <>
         <p>
-          We offer free shipping on all domestic orders above ₹999. For orders
-          below this threshold, a flat shipping fee of ₹49 is applied.
+          We offer free shipping on all domestic orders above ₹2999. For orders
+          below this threshold, a flat shipping fee of ₹99 is applied.
         </p>
         <p>
           International shipping charges are calculated at checkout based on the
