@@ -129,12 +129,17 @@ export default function Hero() {
       className="relative flex min-h-[calc(100svh-5rem)] items-center justify-center overflow-hidden bg-brand-espresso"
     >
       {/* Video background */}
-      <div ref={videoRef} className="absolute inset-0 overflow-hidden">
+      <div ref={videoRef} className="pointer-events-none absolute inset-0 overflow-hidden select-none">
         <video
           autoPlay
           muted
           playsInline
-          className="absolute inset-0 h-full w-full object-cover"
+          controls={false}
+          disablePictureInPicture
+          disableRemotePlayback
+          tabIndex={-1}
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover select-none"
           style={{ transform: "scale(1.352)", transformOrigin: "center center" }}
         >
           <source src="/hero.mp4" type="video/mp4" />
