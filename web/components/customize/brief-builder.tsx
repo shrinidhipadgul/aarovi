@@ -260,20 +260,11 @@ export default function BriefBuilder() {
         );
       default:
         return (
-          <div className="space-y-3">
-            <OptionGrid
-              options={group.options}
-              selected={selected}
-              onSelect={(v) => handleSingleSelect(group.id, v)}
-            />
-            {group.id === "size" && selected === "custom" && (
-              <div className="rounded-lg border border-brand-gold/30 bg-brand-parchment/40 p-3">
-                <p className="font-serif text-xs italic text-brand-gold leading-relaxed">
-                  &#10022; Our master atelier will connect with you to record custom measurements after brief submission. You can also specify any initial measurements in the notes below.
-                </p>
-              </div>
-            )}
-          </div>
+          <OptionGrid
+            options={group.options}
+            selected={selected}
+            onSelect={(v) => handleSingleSelect(group.id, v)}
+          />
         );
     }
   };
