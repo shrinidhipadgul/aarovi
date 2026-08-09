@@ -60,6 +60,21 @@ export const TAXONOMY: CustomizeGroup[] = [
     ],
   },
   {
+    id: "size",
+    step: 2,
+    label: "Reference Size",
+    kind: "single",
+    options: [
+      { value: "xs", label: "XS (32\")" },
+      { value: "s", label: "S (34\")" },
+      { value: "m", label: "M (36\")" },
+      { value: "l", label: "L (38\")" },
+      { value: "xl", label: "XL (40\")" },
+      { value: "xxl", label: "XXL (42\")" },
+      { value: "custom", label: "Custom / Made-to-Measure" },
+    ],
+  },
+  {
     id: "length",
     step: 2,
     label: "Length",

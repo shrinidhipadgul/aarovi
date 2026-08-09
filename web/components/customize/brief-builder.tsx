@@ -12,7 +12,6 @@ import {
   setNotes,
   setOccasion,
   setBudgetTier,
-  setRequiredBy,
 } from "@/lib/stores/customize";
 import { TAXONOMY, type CustomizeGroup } from "@/lib/customize/taxonomy";
 import { getNecklineArt, getSleeveArt } from "./line-art";
@@ -21,6 +20,7 @@ import OptionGrid from "./option-grid";
 import SwatchGrid from "./swatch-grid";
 import MultiSelectChips from "./multi-select-chips";
 import ReferenceUploader from "./reference-uploader";
+import SizeChartModal from "@/components/size-chart-modal";
 
 export default function BriefBuilder() {
   useSyncCustomizeDraft();
@@ -28,6 +28,7 @@ export default function BriefBuilder() {
   const draft = useStore(customizeDraft);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [sizeChartOpen, setSizeChartOpen] = useState(false);
 
   const { data: session } = authClient.useSession();
 
@@ -259,11 +260,20 @@ export default function BriefBuilder() {
         );
       default:
         return (
-          <OptionGrid
-            options={group.options}
-            selected={selected}
-            onSelect={(v) => handleSingleSelect(group.id, v)}
-          />
+          <div className="space-y-3">
+            <OptionGrid
+              options={group.options}
+              selected={selected}
+              onSelect={(v) => handleSingleSelect(group.id, v)}
+            />
+            {group.id === "size" && selected === "custom" && (
+              <div className="rounded-lg border border-brand-gold/30 bg-brand-parchment/40 p-3">
+                <p className="font-serif text-xs italic text-brand-gold leading-relaxed">
+                  &#10022; Our master atelier will connect with you to record custom measurements after brief submission. You can also specify any initial measurements in the notes below.
+                </p>
+              </div>
+            )}
+          </div>
         );
     }
   };
@@ -275,61 +285,115 @@ export default function BriefBuilder() {
   return (
     <div
       id="brief-builder"
-      className="bg-brand-ivory texture-weave px-4 py-20 sm:px-6 sm:py-28 lg:px-8"
+      className="bg-brand-ivory texture-weave px-4 py-16 sm:px-6 sm:py-24 lg:px-8"
     >
-        <div className="mx-auto max-w-7xl">
-          <div className="flex flex-col items-center">
-            {/* Steps & Options Container */}
-            <div className="w-full max-w-5xl">
-              <div className="space-y-16">
-                {stepGroups.map((groups, stepIdx) => (
-                  <div
-                    key={stepIdx}
-                    className={`grid gap-8 ${
-                      groups.length > 1 ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1"
-                    }`}
-                  >
-                    {groups.map((group) => (
-                      <div key={group.id} className="flex flex-col">
-                        <div className="mb-4 flex items-baseline justify-between">
-                          <div>
-                            <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-brand-gold">
-                              N&deg; {String(group.step).padStart(2, "0")} &mdash;{" "}
-                              {group.label}
+      <div className="mx-auto max-w-7xl">
+        <div className="flex flex-col items-center">
+          {/* Atelier Header Banner */}
+          <div className="mb-12 max-w-3xl text-center">
+            <p className="font-mono text-[11px] uppercase tracking-[0.35em] text-brand-gold">
+              N&deg; 00 &mdash; BESPOKE COMMISSIONS
+            </p>
+            <h1 className="mt-3 font-display text-3xl font-bold tracking-tight text-brand-primary sm:text-4xl lg:text-5xl">
+              Craft Your Bespoke Brief
+            </h1>
+            <p className="mx-auto mt-3 max-w-xl font-serif text-base italic leading-relaxed text-brand-text/70 sm:text-lg">
+              Every garment is cut, dyed, and embroidered by hand. Select your specifications below or consult our atelier sizing guide.
+            </p>
+            <div className="mt-5">
+              <button
+                type="button"
+                onClick={() => setSizeChartOpen(true)}
+                className="inline-flex items-center gap-2 rounded-full border border-brand-gold/40 bg-brand-parchment/60 px-5 py-2 font-mono text-xs font-semibold uppercase tracking-[0.15em] text-brand-primary shadow-xs transition-all duration-200 hover:border-brand-primary hover:bg-white active:scale-[0.98]"
+              >
+                <svg
+                  className="h-3.5 w-3.5 text-brand-gold"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+                Atelier Size Chart &amp; Fit Guide &rarr;
+              </button>
+            </div>
+          </div>
+
+          {/* Steps & Options Container */}
+          <div className="w-full max-w-5xl">
+            <div className="space-y-16">
+              {stepGroups.map((groups, stepIdx) => (
+                <div
+                  key={stepIdx}
+                  className={`grid gap-8 ${
+                    groups.length === 3
+                      ? "grid-cols-1 md:grid-cols-3"
+                      : groups.length === 2
+                        ? "grid-cols-1 md:grid-cols-2"
+                        : "grid-cols-1"
+                  }`}
+                >
+                  {groups.map((group) => (
+                    <div key={group.id} className="flex flex-col">
+                      <div className="mb-4 flex items-baseline justify-between gap-2">
+                        <div>
+                          <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-brand-gold">
+                            N&deg; {String(group.step).padStart(2, "0")} &mdash;{" "}
+                            {group.label}
+                          </p>
+                          {group.kind === "multi" && (
+                            <p className="mt-1 font-serif text-xs italic text-brand-text/30">
+                              Select all that apply
                             </p>
-                            {group.kind === "multi" && (
-                              <p className="mt-1 font-serif text-xs italic text-brand-text/30">
-                                Select all that apply
-                              </p>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="flex-1 rounded-2xl border border-brand-primary/10 bg-white p-6 shadow-sm">
-                          {renderGroup(group)}
-
-                          {group.id === "color" && (
-                            <div className="mt-4 border-t border-brand-primary/5 pt-4">
-                              <label className="flex cursor-pointer items-center gap-3">
-                                <input
-                                  type="checkbox"
-                                  checked={draft.colorMatchReference}
-                                  onChange={(e) =>
-                                    setColorMatchReference(e.target.checked)
-                                  }
-                                  className="h-4 w-4 rounded border-brand-primary/15 text-brand-primary focus:ring-brand-gold"
-                                />
-                                <span className="text-sm text-brand-text/60">
-                                  Match colour to my reference image instead
-                                </span>
-                              </label>
-                            </div>
                           )}
                         </div>
+
+                        {group.id === "size" && (
+                          <button
+                            type="button"
+                            onClick={() => setSizeChartOpen(true)}
+                            className="inline-flex items-center gap-1 font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-brand-gold underline-offset-2 hover:text-brand-primary hover:underline"
+                          >
+                            <svg
+                              className="h-3 w-3"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth={2}
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                            </svg>
+                            Size Guide
+                          </button>
+                        )}
                       </div>
-                    ))}
-                  </div>
-                ))}
+
+                      <div className="flex-1 rounded-2xl border border-brand-primary/10 bg-white p-6 shadow-sm">
+                        {renderGroup(group)}
+
+                        {group.id === "color" && (
+                          <div className="mt-4 border-t border-brand-primary/5 pt-4">
+                            <label className="flex cursor-pointer items-center gap-3">
+                              <input
+                                type="checkbox"
+                                checked={draft.colorMatchReference}
+                                onChange={(e) =>
+                                  setColorMatchReference(e.target.checked)
+                                }
+                                className="h-4 w-4 rounded border-brand-primary/15 text-brand-primary focus:ring-brand-gold"
+                              />
+                              <span className="text-sm text-brand-text/60">
+                                Match colour to my reference image instead
+                              </span>
+                            </label>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ))}
 
                 {/* Step 7: Occasion, Budget, Notes & References */}
                 <div className="space-y-8 rounded-2xl border border-brand-primary/10 bg-white p-6 shadow-sm sm:p-8">
@@ -407,6 +471,12 @@ export default function BriefBuilder() {
             </div>
           </div>
         </div>
+
+        {/* Atelier Size Chart Modal */}
+        <SizeChartModal
+          open={sizeChartOpen}
+          onClose={() => setSizeChartOpen(false)}
+        />
       </div>
   );
 }

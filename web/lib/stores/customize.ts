@@ -153,7 +153,7 @@ export const isDraftDirty = computed(customizeDraft, (draft) => {
 export const completedSteps = computed(customizeDraft, (draft) => {
   const steps = new Set<number>();
   if (draft.selections.garment) steps.add(1);
-  if (draft.selections.silhouette || draft.selections.length) steps.add(2);
+  if (draft.selections.silhouette || draft.selections.length || draft.selections.size) steps.add(2);
   if (draft.selections.neckline) steps.add(3);
   if (draft.selections.sleeve) steps.add(4);
   if (draft.selections.fabric || draft.selections.color || draft.colorMatchReference)
