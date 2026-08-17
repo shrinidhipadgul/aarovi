@@ -10,6 +10,13 @@ export interface UploadAdapter {
     fileName: string,
   ): Promise<PresignedUpload>;
   getPresignedGetUrl?(key: string): Promise<string>;
+  getObject?(key: string): Promise<{
+    body: Uint8Array;
+    contentType?: string;
+    contentLength?: number;
+    etag?: string;
+    cacheControl?: string;
+  }>;
   objectExists?(key: string): Promise<boolean>;
 }
 

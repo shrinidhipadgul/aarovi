@@ -10,33 +10,39 @@ export function getPublicUrl(key: string): string {
     key.startsWith("http://") ||
     key.startsWith("https://") ||
     key.startsWith("blob:") ||
-    key.startsWith("/")
+    key.startsWith("/api/uploads/file") ||
+    key.startsWith("/images/") ||
+    key.startsWith("/uploads/")
   ) {
     return key;
   }
+  const cleanKey = key.replace(/^\/+/, "");
   const base =
     process.env.NEXT_PUBLIC_S3_PUBLIC_BASE_URL ?? process.env.S3_PUBLIC_BASE_URL;
   if (base) {
     const cleanBase = base.replace(/\/+$/, "");
-    return `${cleanBase}/${key}`;
+    return `${cleanBase}/${cleanKey}`;
   }
-  return `/api/uploads/file?key=${encodeURIComponent(key)}`;
+  return `/api/uploads/file?key=${encodeURIComponent(cleanKey)}`;
 }
 
 export function extractKey(url?: string): string | null {
   if (!url) return null;
 
-  if (url.startsWith("http://") || url.startsWith("https://")) {
-    try {
-      const u = new URL(url);
-      const path = u.pathname.replace(/^\//, "");
-      return path || null;
-    } catch {
-      return null;
-    }
-  }
+  try {
+    const u = url.startsWith("http://") || url.startsWith("https://")
+      ? new URL(url)
+      : new URL(url, "http://localhost");
 
-  return url.replace(/^\//, "");
+    if (u.searchParams.has("key")) {
+      const k = u.searchParams.get("key");
+      return k ? k.replace(/^\/+/, "") : null;
+    }
+    const path = u.pathname.replace(/^\/+/, "");
+    return path || null;
+  } catch {
+    return url.replace(/^\/+/, "") || null;
+  }
 }
 
 export function buildS3Key({

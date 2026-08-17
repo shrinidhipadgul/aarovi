@@ -108,10 +108,37 @@ export class S3Adapter implements UploadAdapter {
     return getSignedUrl(this.client, command, { expiresIn: 3600 });
   }
 
+  async getObject(key: string): Promise<{
+    body: Uint8Array;
+    contentType?: string;
+    contentLength?: number;
+    etag?: string;
+    cacheControl?: string;
+  }> {
+    const cleanKey = this.extractKeyFromUrl(key);
+    const command = new GetObjectCommand({
+      Bucket: this.bucket,
+      Key: cleanKey,
+    });
+    const response = await this.client.send(command);
+    if (!response.Body) {
+      throw new Error(`Empty body returned from S3 for key: ${cleanKey}`);
+    }
+    const body = await response.Body.transformToByteArray();
+    return {
+      body,
+      contentType: response.ContentType,
+      contentLength: response.ContentLength,
+      etag: response.ETag,
+      cacheControl: response.CacheControl ?? "public, max-age=31536000, immutable",
+    };
+  }
+
   async objectExists(key: string): Promise<boolean> {
     try {
+      const cleanKey = this.extractKeyFromUrl(key);
       await this.client.send(
-        new HeadObjectCommand({ Bucket: this.bucket, Key: key }),
+        new HeadObjectCommand({ Bucket: this.bucket, Key: cleanKey }),
       );
       return true;
     } catch {
@@ -120,11 +147,20 @@ export class S3Adapter implements UploadAdapter {
   }
 
   private extractKeyFromUrl(url: string): string {
+    if (!url) return "";
     try {
-      const u = new URL(url);
-      return u.pathname.replace(/^\//, "");
+      // Handle full URLs or paths with query params like /api/uploads/file?key=...
+      const u = url.startsWith("http://") || url.startsWith("https://")
+        ? new URL(url)
+        : new URL(url, "http://localhost");
+
+      if (u.searchParams.has("key")) {
+        const k = u.searchParams.get("key");
+        return k ? k.replace(/^\/+/, "") : "";
+      }
+      return u.pathname.replace(/^\/+/, "");
     } catch {
-      return url.replace(/^\//, "");
+      return url.replace(/^\/+/, "");
     }
   }
 }

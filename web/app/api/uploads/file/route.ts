@@ -11,12 +11,41 @@ export async function GET(req: Request) {
 
   const adapter = getUploadAdapter();
 
+  if (adapter.getObject) {
+    try {
+      const obj = await adapter.getObject(key);
+      const headers: Record<string, string> = {
+        "Content-Type": obj.contentType || "application/octet-stream",
+        "Cache-Control":
+          obj.cacheControl || "public, max-age=31536000, immutable",
+      };
+
+      if (obj.contentLength !== undefined) {
+        headers["Content-Length"] = obj.contentLength.toString();
+      }
+      if (obj.etag) {
+        headers["ETag"] = obj.etag;
+      }
+
+      return new NextResponse(Buffer.from(obj.body), {
+        status: 200,
+        headers,
+      });
+    } catch {
+      return new NextResponse("File not found or access denied", {
+        status: 404,
+      });
+    }
+  }
+
   if (adapter.getPresignedGetUrl) {
     try {
       const signedUrl = await adapter.getPresignedGetUrl(key);
       return NextResponse.redirect(signedUrl, { status: 307 });
     } catch {
-      return new NextResponse("File not found or access denied", { status: 404 });
+      return new NextResponse("File not found or access denied", {
+        status: 404,
+      });
     }
   }
 

@@ -1,7 +1,17 @@
-import { writeFile, mkdir, unlink } from "node:fs/promises";
-import { join } from "node:path";
+import { writeFile, mkdir, unlink, readFile } from "node:fs/promises";
+import { join, extname } from "node:path";
 import { ALLOWED_TYPES, MAX_SIZE } from "./constants";
 import type { UploadAdapter } from "./index";
+
+const MIME_MAP: Record<string, string> = {
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".png": "image/png",
+  ".webp": "image/webp",
+  ".svg": "image/svg+xml",
+  ".gif": "image/gif",
+  ".avif": "image/avif",
+};
 
 export class PublicDirAdapter implements UploadAdapter {
   private baseDir: string;
@@ -36,6 +46,26 @@ export class PublicDirAdapter implements UploadAdapter {
     const cleanPath = path.replace(/^\//, "");
     const fullPath = join(process.cwd(), "public", cleanPath);
     await unlink(fullPath).catch(() => {});
+  }
+
+  async getObject(key: string): Promise<{
+    body: Uint8Array;
+    contentType?: string;
+    contentLength?: number;
+    etag?: string;
+    cacheControl?: string;
+  }> {
+    const cleanPath = key.replace(/^\//, "").replace(/^uploads\//, "");
+    const fullPath = join(this.baseDir, cleanPath);
+    const buffer = await readFile(fullPath);
+    const ext = extname(fullPath).toLowerCase();
+    const contentType = MIME_MAP[ext] || "application/octet-stream";
+    return {
+      body: buffer,
+      contentType,
+      contentLength: buffer.length,
+      cacheControl: "public, max-age=31536000, immutable",
+    };
   }
 
   getPresignedPutUrl(): never {
