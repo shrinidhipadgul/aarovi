@@ -16,8 +16,8 @@ interface Props {
 export default async function EditProductPage({ params }: Props) {
   const { productId } = await params;
 
-  const product = await prisma.product.findUnique({
-    where: { id: productId },
+  const product = await prisma.product.findFirst({
+    where: { id: productId, deletedAt: null },
   });
 
   if (!product) {

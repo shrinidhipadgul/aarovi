@@ -62,7 +62,9 @@ const listProducts = async (req: Request) => {
   const category = url.searchParams.get("category");
   const inStockParam = url.searchParams.get("inStock");
 
-  const where: Record<string, unknown> = {};
+  const where: Record<string, unknown> = {
+    deletedAt: null,
+  };
 
   if (search && search.length >= 2) {
     where.OR = [

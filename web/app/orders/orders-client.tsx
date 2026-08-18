@@ -74,10 +74,16 @@ export default function OrdersPage() {
   const { data: session } = authClient.useSession();
   const loggedIn = !!session;
 
-  const initialTab = searchParams.get("tab") === "customize" ? "customize" : "orders";
-  const initialId = searchParams.get("id");
+  const tabParam = searchParams.get("tab") === "customize" ? "customize" : "orders";
+  const idParam = searchParams.get("id");
 
-  const [activeTab, setActiveTab] = useState<"orders" | "customize">(initialTab);
+  const [activeTab, setActiveTab] = useState<"orders" | "customize">(tabParam);
+  const [prevTabParam, setPrevTabParam] = useState(tabParam);
+  if (tabParam !== prevTabParam) {
+    setPrevTabParam(tabParam);
+    setActiveTab(tabParam);
+  }
+
   const [orders, setOrders] = useState<OrderData[]>([]);
   const [customizations, setCustomizations] = useState<CustomizationRequestData[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
@@ -86,16 +92,12 @@ export default function OrdersPage() {
   const [errorCustomizations, setErrorCustomizations] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
 
-  const [selectedCustomizeId, setSelectedCustomizeId] = useState<string | null>(initialId);
-
-  useEffect(() => {
-    if (searchParams.get("tab") === "customize") {
-      setActiveTab("customize");
-    }
-    if (searchParams.get("id")) {
-      setSelectedCustomizeId(searchParams.get("id"));
-    }
-  }, [searchParams]);
+  const [selectedCustomizeId, setSelectedCustomizeId] = useState<string | null>(idParam);
+  const [prevIdParam, setPrevIdParam] = useState(idParam);
+  if (idParam !== prevIdParam) {
+    setPrevIdParam(idParam);
+    setSelectedCustomizeId(idParam);
+  }
 
   // Fetch standard orders
   useEffect(() => {

@@ -21,7 +21,10 @@ export const POST = requireAuth(
   }
 
   const products = await prisma.product.findMany({
-    where: { id: { in: items.map((i: MergeItem) => i.productId) } },
+    where: {
+      id: { in: items.map((i: MergeItem) => i.productId) },
+      deletedAt: null,
+    },
     select: { id: true, sizes: true, inStock: true, stock: true },
   });
 

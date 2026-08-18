@@ -69,10 +69,19 @@ export function ProductListClient({
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`Delete "${name}"? This action cannot be undone.`)) return;
 
-    const res = await fetch(`/api/admin/products/${id}`, { method: "DELETE" });
-    if (res.ok) {
-      setProducts((prev) => prev.filter((p) => p.id !== id));
-      setTotal((prev) => prev - 1);
+    try {
+      const res = await fetch(`/api/admin/products/${id}`, { method: "DELETE" });
+      const json = await res.json().catch(() => null);
+
+      if (res.ok) {
+        setProducts((prev) => prev.filter((p) => p.id !== id));
+        setTotal((prev) => prev - 1);
+        router.refresh();
+      } else {
+        alert(json?.message || "Failed to delete product. Please try again.");
+      }
+    } catch {
+      alert("Network error while deleting product.");
     }
   };
 

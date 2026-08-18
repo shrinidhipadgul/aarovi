@@ -7,8 +7,8 @@ const getProduct = async (req: Request) => {
   const url = new URL(req.url);
   const productId = url.pathname.split("/").filter(Boolean).pop() ?? "";
 
-  const product = await prisma.product.findUnique({
-    where: { id: productId },
+  const product = await prisma.product.findFirst({
+    where: { id: productId, deletedAt: null },
   });
 
   if (!product) {
@@ -22,8 +22,8 @@ const updateProduct = async (req: Request) => {
   const url = new URL(req.url);
   const productId = url.pathname.split("/").filter(Boolean).pop() ?? "";
 
-  const existing = await prisma.product.findUnique({
-    where: { id: productId },
+  const existing = await prisma.product.findFirst({
+    where: { id: productId, deletedAt: null },
     select: { id: true },
   });
 
@@ -76,8 +76,8 @@ const updateProduct = async (req: Request) => {
   }
 
   if (body.slug) {
-    const slugProduct = await prisma.product.findUnique({
-      where: { slug: body.slug as string },
+    const slugProduct = await prisma.product.findFirst({
+      where: { slug: body.slug as string, deletedAt: null },
       select: { id: true },
     });
     if (slugProduct && slugProduct.id !== productId) {
@@ -138,9 +138,9 @@ const deleteProduct = async (req: Request) => {
   const url = new URL(req.url);
   const productId = url.pathname.split("/").filter(Boolean).pop() ?? "";
 
-  const existing = await prisma.product.findUnique({
-    where: { id: productId },
-    select: { id: true },
+  const existing = await prisma.product.findFirst({
+    where: { id: productId, deletedAt: null },
+    select: { id: true, slug: true },
   });
 
   if (!existing) {
@@ -149,7 +149,10 @@ const deleteProduct = async (req: Request) => {
 
   const product = await prisma.product.update({
     where: { id: productId },
-    data: { deletedAt: new Date() },
+    data: {
+      deletedAt: new Date(),
+      slug: `${existing.slug}-deleted-${Date.now()}`,
+    },
   });
 
   return successResponse(product);

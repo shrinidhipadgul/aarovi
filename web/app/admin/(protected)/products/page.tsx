@@ -11,10 +11,13 @@ export const metadata: Metadata = {
 export default async function AdminProductsPage() {
   const [rows, total] = await Promise.all([
     prisma.product.findMany({
+      where: { deletedAt: null },
       orderBy: { createdAt: "desc" },
       take: 20,
     }),
-    prisma.product.count(),
+    prisma.product.count({
+      where: { deletedAt: null },
+    }),
   ]);
 
   type RawProduct = typeof rows extends (infer U)[] ? U : never;

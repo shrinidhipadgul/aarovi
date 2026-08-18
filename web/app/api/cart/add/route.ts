@@ -27,8 +27,8 @@ export const POST = requireAuth(
     return errorResponse("quantity must be an integer between 1 and 10", 400);
   }
 
-  const product = await prisma.product.findUnique({
-    where: { id: productId },
+  const product = await prisma.product.findFirst({
+    where: { id: productId, deletedAt: null },
     select: { id: true, sizes: true, inStock: true, stock: true },
   });
 

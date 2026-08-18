@@ -5,7 +5,7 @@ import SectionReveal from "@/components/section-reveal";
 
 export default async function FeaturedProducts() {
   const products = await prisma.product.findMany({
-    where: { featured: true },
+    where: { featured: true, deletedAt: null },
     take: 8,
     orderBy: { createdAt: "desc" },
   });
