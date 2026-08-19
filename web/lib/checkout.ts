@@ -1,7 +1,6 @@
 import { createHmac } from "node:crypto";
 
 export const DELIVERY_FEE = 50;
-export const FREE_DELIVERY_THRESHOLD = 999;
 
 export interface CheckoutItem {
   price: number;
@@ -19,7 +18,7 @@ export function calculateTotals(items: CheckoutItem[]): OrderTotals {
     (sum, item) => sum + item.price * item.quantity,
     0,
   );
-  const deliveryFee = subtotal >= FREE_DELIVERY_THRESHOLD || subtotal === 0 ? 0 : DELIVERY_FEE;
+  const deliveryFee = items.length === 0 ? 0 : DELIVERY_FEE;
   const total = subtotal + deliveryFee;
   return { subtotal, deliveryFee, total };
 }

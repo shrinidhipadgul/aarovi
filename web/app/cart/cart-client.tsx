@@ -251,11 +251,7 @@ export default function CartPage() {
                 <div className="flex justify-between">
                   <dt className="text-brand-text/60">Delivery</dt>
                   <dd className="font-medium text-brand-text">
-                    {totals.deliveryFee === 0 ? (
-                      <span className="text-green-600">Free</span>
-                    ) : (
-                      formatMoney(totals.deliveryFee)
-                    )}
+                    {formatMoney(totals.deliveryFee)}
                   </dd>
                 </div>
                 <div className="border-t border-brand-primary/10 pt-3">

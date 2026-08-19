@@ -27,8 +27,7 @@ const sections = [
     title: "Shipping Charges",
     content: (
       <p>
-        We offer free shipping on all orders above ₹999 across India. For orders
-        below this threshold, a flat delivery fee of ₹50 is applied at checkout.
+        A standard shipping fee of ₹50 is applied to all orders across India at checkout.
       </p>
     ),
   },

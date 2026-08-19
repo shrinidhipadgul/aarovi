@@ -7,7 +7,6 @@ import { authClient } from "@/lib/auth-client";
 import { resetCart } from "@/lib/stores/cart";
 import {
   DELIVERY_FEE,
-  FREE_DELIVERY_THRESHOLD,
   validateAddress,
 } from "@/lib/checkout";
 import {
@@ -140,8 +139,7 @@ export default function PlaceOrderPage() {
   };
 
   const subtotal = items.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
-  const deliveryFee =
-    subtotal >= FREE_DELIVERY_THRESHOLD || subtotal === 0 ? 0 : DELIVERY_FEE;
+  const deliveryFee = items.length === 0 ? 0 : DELIVERY_FEE;
   const total = subtotal + deliveryFee;
 
   const handlePlaceOrder = async (e: React.FormEvent) => {
@@ -496,20 +494,13 @@ export default function PlaceOrderPage() {
               </div>
               <div className="flex justify-between text-sm text-brand-text/70">
                 <span>Delivery Fee</span>
-                <span>
-                  {deliveryFee === 0 ? "Free" : formatMoney(deliveryFee)}
-                </span>
+                <span>{formatMoney(deliveryFee)}</span>
               </div>
               <div className="flex justify-between text-base font-semibold text-brand-primary">
                 <span>Total</span>
                 <span>{formatMoney(total)}</span>
               </div>
             </div>
-            {deliveryFee > 0 && (
-              <p className="mt-1 text-xs text-brand-text/60">
-                Get free delivery on orders over {formatMoney(FREE_DELIVERY_THRESHOLD)}.
-              </p>
-            )}
           </section>
         </div>
 

@@ -6,7 +6,7 @@ import { gsap, prefersReducedMotion } from "@/lib/animations";
 
 const items = [
   "Hand-embroidered in India",
-  "Complimentary shipping over ₹999",
+  "Pan-India express delivery",
   "Easy 7-day returns",
   "Made-to-measure available",
   "New drops every Friday",
