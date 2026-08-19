@@ -25,17 +25,12 @@ const shipping: AccordionItem[] = [
   {
     title: "How long does shipping take?",
     content:
-      "Domestic orders are delivered within 5–7 business days. Metro cities typically receive orders in 3–5 business days. International shipping takes 10–14 business days depending on the destination and customs clearance.",
+      "Orders are delivered within 5–7 business days across India. Metro cities typically receive orders within 3–5 business days.",
   },
   {
     title: "How do I track my order?",
     content:
       "Once your order is dispatched, you'll receive a tracking link via email and SMS. You can also track your order by logging into your account and visiting the 'My Orders' section.",
-  },
-  {
-    title: "Do you offer international shipping?",
-    content:
-      "Yes, we ship to over 20 countries including the USA, UK, Canada, Australia, UAE, and Singapore. International shipping charges are calculated at checkout based on your location and order weight.",
   },
 ];
 

@@ -16,12 +16,10 @@ interface OrderCancellationEmailProps {
 export function OrderCancellationEmail({
   orderId,
   total,
-  paymentMethod,
+  paymentMethod: _paymentMethod,
   items,
   address,
 }: OrderCancellationEmailProps) {
-  const isOnlinePayment = paymentMethod !== "COD";
-
   return (
     <EmailLayout preview={`Your Aarovi order ${orderId.slice(-8)} has been cancelled`}>
       <Heading style={{ margin: 0, fontSize: "22px", color: BRAND_PRIMARY }}>
@@ -58,33 +56,19 @@ export function OrderCancellationEmail({
         >
           <strong>Order ID:</strong> #{orderId}
         </Text>
-        {isOnlinePayment ? (
-          <Text
-            style={{
-              margin: "6px 0 0",
-              fontSize: "13px",
-              lineHeight: "20px",
-              color: `${BRAND_PRIMARY}cc`,
-            }}
-          >
-            Since you paid online, a refund of the full order amount will be
-            issued to your original payment method within 5–7 business days. If
-            it doesn’t appear within that window, reply to this email and we’ll
-            chase it down.
-          </Text>
-        ) : (
-          <Text
-            style={{
-              margin: "6px 0 0",
-              fontSize: "13px",
-              lineHeight: "20px",
-              color: `${BRAND_PRIMARY}cc`,
-            }}
-          >
-            Because you chose Cash on Delivery, no payment was charged — there’s
-            nothing further you need to do.
-          </Text>
-        )}
+        <Text
+          style={{
+            margin: "6px 0 0",
+            fontSize: "13px",
+            lineHeight: "20px",
+            color: `${BRAND_PRIMARY}cc`,
+          }}
+        >
+          Since you paid online, a refund of the full order amount will be
+          issued to your original payment method within 5–7 business days. If
+          it doesn’t appear within that window, reply to this email and we’ll
+          chase it down.
+        </Text>
       </Section>
 
       <OrderItemsTable items={items} total={total} />

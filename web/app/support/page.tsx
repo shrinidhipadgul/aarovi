@@ -35,7 +35,7 @@ const topics = [
   },
   {
     title: "Shipping Info",
-    description: "Domestic and international shipping times and charges.",
+    description: "Shipping times, charges, and delivery details across India.",
     href: "/shippingpolicy",
     icon: (
       <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden>

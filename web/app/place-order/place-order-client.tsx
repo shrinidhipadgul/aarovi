@@ -72,7 +72,7 @@ export default function PlaceOrderPage() {
   const [address, setAddress] = useState<AddressForm>(EMPTY_ADDRESS);
   const [addressErrors, setAddressErrors] = useState<Record<string, string>>({});
   const [saveAddress, setSaveAddress] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<"COD" | "RAZORPAY">("COD");
+  const paymentMethod = "RAZORPAY";
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
@@ -195,12 +195,6 @@ export default function PlaceOrderPage() {
       }
 
       const data = createJson.data;
-
-      if (paymentMethod === "COD") {
-        resetCart();
-        router.push(`/place-order/success?orderId=${data.orderId}`);
-        return;
-      }
 
       await loadRazorpayScript();
 
@@ -435,19 +429,22 @@ export default function PlaceOrderPage() {
             <h2 className="text-lg font-semibold text-brand-primary">
               Payment Method
             </h2>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Payment method">
-              <PaymentOption
-                selected={paymentMethod === "COD"}
-                onClick={() => setPaymentMethod("COD")}
-                title="Cash on Delivery"
-                description="Pay with cash when your order arrives"
-              />
-              <PaymentOption
-                selected={paymentMethod === "RAZORPAY"}
-                onClick={() => setPaymentMethod("RAZORPAY")}
-                title="Online Payment"
-                description="Pay securely via Razorpay"
-              />
+            <div className="mt-4 rounded-xl border border-brand-primary/15 bg-white p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-brand-primary/10 text-brand-primary">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-brand-text">
+                    Online Payment (Razorpay)
+                  </p>
+                  <p className="text-xs text-brand-text/60">
+                    Pay securely using UPI, Credit/Debit Cards, Net Banking, or Wallets
+                  </p>
+                </div>
+              </div>
             </div>
           </section>
 
@@ -532,11 +529,7 @@ export default function PlaceOrderPage() {
               disabled={submitting}
               className="w-full rounded-lg bg-brand-primary px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {submitting
-                ? "Processing..."
-                : paymentMethod === "COD"
-                  ? "Place Order"
-                  : "Pay & Place Order"}
+              {submitting ? "Processing..." : "Pay & Place Order"}
             </button>
             <p className="mt-3 text-center text-xs text-brand-text/60">
               By placing your order you agree to our terms.
@@ -584,45 +577,5 @@ function FieldInput({
       />
       {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
     </div>
-  );
-}
-
-function PaymentOption({
-  selected,
-  onClick,
-  title,
-  description,
-}: {
-  selected: boolean;
-  onClick: () => void;
-  title: string;
-  description: string;
-}) {
-  return (
-    <button
-      type="button"
-      role="radio"
-      aria-checked={selected}
-      onClick={onClick}
-      className={`rounded-lg border p-4 text-left transition-colors ${
-        selected
-          ? "border-brand-gold bg-brand-bg"
-          : "border-brand-primary/15 hover:border-brand-primary/30"
-      }`}
-    >
-      <div className="flex items-center gap-2">
-        <span
-          className={`flex h-4 w-4 flex-none items-center justify-center rounded-full border-2 ${
-            selected ? "border-brand-gold" : "border-brand-primary/20"
-          }`}
-        >
-          {selected && (
-            <span className="h-2 w-2 rounded-full bg-brand-gold" />
-          )}
-        </span>
-        <span className="text-sm font-semibold text-brand-text">{title}</span>
-      </div>
-      <p className="mt-1.5 pl-6 text-xs text-brand-text/60">{description}</p>
-    </button>
   );
 }

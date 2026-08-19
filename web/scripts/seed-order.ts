@@ -38,7 +38,8 @@ async function main() {
       userId: user.id,
       status: "shipped",
       total,
-      paymentMethod: "COD",
+      paymentMethod: "RAZORPAY",
+      paymentId: "pay_sample_12345",
       address: {
         fullName: user.name,
         phone: "9999999999",

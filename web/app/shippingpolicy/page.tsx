@@ -3,7 +3,7 @@ import { PolicyLayout, PolicySection } from "@/components/policy-layout";
 
 export const metadata: Metadata = {
   title: "Shipping Policy",
-  description: "Aarovi's shipping policy for domestic and international orders.",
+  description: "Aarovi's shipping policy for domestic orders across India.",
   openGraph: { title: "Shipping Policy | Aarovi" },
 };
 
@@ -14,7 +14,7 @@ const sections = [
       "All orders are processed within 1–2 business days after order confirmation. Orders placed on weekends or public holidays will begin processing on the next business day. You will receive a confirmation email once your order has been shipped along with tracking information.",
   },
   {
-    title: "Domestic Delivery Estimates",
+    title: "Delivery Estimates",
     content: (
       <ul>
         <li>Metro cities: 3–5 business days</li>
@@ -24,23 +24,12 @@ const sections = [
     ),
   },
   {
-    title: "International Shipping",
-    content:
-      "We ship to over 20 countries including the USA, UK, Canada, Australia, UAE, and Singapore. International delivery typically takes 10–14 business days depending on the destination, customs clearance procedures, and local postal services. Customs duties and taxes are the responsibility of the customer.",
-  },
-  {
     title: "Shipping Charges",
     content: (
-      <>
-        <p>
-          We offer free shipping on all domestic orders above ₹2999. For orders
-          below this threshold, a flat shipping fee of ₹99 is applied.
-        </p>
-        <p>
-          International shipping charges are calculated at checkout based on the
-          destination and total weight of the order.
-        </p>
-      </>
+      <p>
+        We offer free shipping on all orders above ₹999 across India. For orders
+        below this threshold, a flat delivery fee of ₹50 is applied at checkout.
+      </p>
     ),
   },
   {
@@ -51,12 +40,12 @@ const sections = [
   {
     title: "Areas Served",
     content:
-      "We ship to all pin codes across India. For international orders, we currently serve the USA, UK, Canada, Australia, UAE, Singapore, and select European countries. If your country is not listed at checkout, please contact us and we will do our best to accommodate your order.",
+      "We ship to all serviceable pin codes across India.",
   },
   {
     title: "Shipping Delays",
     content:
-      "While we strive to meet all delivery estimates, unforeseen circumstances such as weather events, customs delays, or courier disruptions may occasionally cause delays. We appreciate your patience and will keep you updated on any significant changes to your delivery timeline.",
+      "While we strive to meet all delivery estimates, unforeseen circumstances such as severe weather events or courier disruptions may occasionally cause delays. We appreciate your patience and will keep you updated on any significant changes to your delivery timeline.",
   },
 ];
 

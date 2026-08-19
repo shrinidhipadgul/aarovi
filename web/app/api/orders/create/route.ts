@@ -1,4 +1,3 @@
-import { after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/get-session";
 import { requireAuth } from "@/lib/api-require-auth";
@@ -14,24 +13,6 @@ import {
   createRazorpayOrder,
   type AddressInput,
 } from "@/lib/checkout";
-import { fetchOrderForEmail } from "@/lib/queries/orders";
-import { isEmailConfigured, sendOrderConfirmationEmail } from "@/lib/email";
-
-function sendOrderConfirmationAfter(orderId: string) {
-  after(async () => {
-    if (!isEmailConfigured()) return;
-    try {
-      const order = await fetchOrderForEmail(orderId);
-      if (!order?.user?.email) return;
-      await sendOrderConfirmationEmail(order);
-    } catch (e) {
-      console.error("[email] order-confirmation (post-create)", {
-        orderId,
-        error: e,
-      });
-    }
-  });
-}
 
 export const POST = requireAuth(
   withErrorHandler(async (req: Request) => {
@@ -39,12 +20,13 @@ export const POST = requireAuth(
 
   const body = (await req.json()) as {
     address: AddressInput;
-    paymentMethod: string;
+    paymentMethod?: string;
     saveAddress?: boolean;
   };
 
-  if (!body.paymentMethod || !["COD", "RAZORPAY"].includes(body.paymentMethod)) {
-    return errorResponse("Invalid payment method", 400);
+  const paymentMethod = body.paymentMethod || "RAZORPAY";
+  if (paymentMethod !== "RAZORPAY") {
+    return errorResponse("Invalid payment method. Only online payments are accepted.", 400);
   }
 
   const addressErrors = validateAddress(body.address);
@@ -114,58 +96,9 @@ export const POST = requireAuth(
     price: item.product.price,
   }));
 
-  if (body.paymentMethod === "COD") {
-    const order = await prisma.$transaction(async (tx) => {
-      const created = await tx.order.create({
-        data: {
-          userId: session.user.id,
-          total,
-          status: "confirmed",
-          address: addressData,
-          paymentMethod: "COD",
-          items: { create: orderItems },
-        },
-        select: { id: true },
-      });
-
-      for (const item of cartItems) {
-        const updated = await tx.product.update({
-          where: { id: item.productId },
-          data: {
-            stock: { decrement: item.quantity },
-          },
-          select: { stock: true },
-        });
-        if (updated.stock <= 0) {
-          await tx.product.update({
-            where: { id: item.productId },
-            data: { inStock: false },
-          });
-        }
-      }
-
-      await tx.cartItem.deleteMany({ where: { userId: session.user.id } });
-
-      if (body.saveAddress) {
-        await tx.address.create({
-          data: {
-            userId: session.user.id,
-            ...addressData,
-          },
-        });
-      }
-
-      return created;
-    });
-
-    sendOrderConfirmationAfter(order.id);
-
-    return successResponse({ orderId: order.id, status: "confirmed" }, 201);
-  }
-
   if (!isRazorpayConfigured()) {
     return errorResponse(
-      "Online payment is not configured. Please choose Cash on Delivery.",
+      "Online payment is currently unavailable. Please try again later.",
       503,
     );
   }
