@@ -20,9 +20,7 @@ export function organizationJsonLd(siteUrl: string) {
       addressCountry: "IN",
     },
     sameAs: [
-      "https://www.instagram.com/aaroviofficial",
-      "https://www.linkedin.com/company/aaroviofficial",
-      "https://x.com/aaroviofficial",
+      "https://www.instagram.com/aarovi_official/",
     ],
     contactPoint: {
       "@type": "ContactPoint",

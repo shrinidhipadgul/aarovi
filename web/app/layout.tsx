@@ -86,8 +86,6 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    site: "@aaroviofficial",
-    creator: "@aaroviofficial",
   },
   robots: {
     index: true,
