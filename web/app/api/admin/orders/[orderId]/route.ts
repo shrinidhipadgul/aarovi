@@ -5,7 +5,7 @@ import { withErrorHandler } from "@/lib/with-error-handler";
 import { successResponse, notFoundResponse } from "@/lib/api-response";
 import {
   getTimeline,
-  statusLabel,
+  adminStatusLabel,
   statusBadgeColor,
 } from "@/lib/order-status";
 
@@ -53,12 +53,13 @@ const getOrder = async (_req: NextRequest, ctx: OrderParamsCtx) => {
     userName: order.user?.name ?? null,
     total: order.total,
     status: order.status,
-    statusLabel: statusLabel(order.status),
+    statusLabel: adminStatusLabel(order.status),
     badgeColor: statusBadgeColor(order.status),
     timeline: getTimeline(order.status),
     address: order.address,
     paymentMethod: order.paymentMethod,
     paymentId: order.paymentId,
+    paymentProof: order.paymentProof,
     items: order.items,
     createdAt: order.createdAt.toISOString(),
     updatedAt: order.updatedAt.toISOString(),

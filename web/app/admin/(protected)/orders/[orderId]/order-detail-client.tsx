@@ -43,6 +43,7 @@ interface OrderDetail {
   address: unknown;
   paymentMethod: string;
   paymentId: string | null;
+  paymentProof: string | null;
   items: OrderItem[];
   createdAt: string;
   updatedAt: string;
@@ -89,6 +90,7 @@ const formatDate = (iso: string) =>
 const formatMoney = (n: number) => `\u20B9${n.toLocaleString("en-IN")}`;
 
 const STATUS_LABELS: Record<string, string> = {
+  pending: "Pending Verification",
   confirmed: "Order Confirmed",
   processing: "Processing",
   shipped: "Shipped",
@@ -103,13 +105,12 @@ export function OrderDetailClient({ initialData }: OrderDetailClientProps) {
   const [saving, setSaving] = useState(false);
   const [serverError, setServerError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+  const [copiedTxId, setCopiedTxId] = useState(false);
+  const [showScreenshotModal, setShowScreenshotModal] = useState(false);
 
   const address = parseAddress(initialData.address);
 
-  const handleUpdateStatus = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (status === initialData.status) return;
-
+  const updateStatusTo = async (newStatus: string) => {
     setSaving(true);
     setServerError("");
     setFieldErrors({});
@@ -118,7 +119,7 @@ export function OrderDetailClient({ initialData }: OrderDetailClientProps) {
       const res = await fetch(`/api/admin/orders/${initialData.id}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status: newStatus }),
       });
       const json = await res.json();
 
@@ -128,6 +129,7 @@ export function OrderDetailClient({ initialData }: OrderDetailClientProps) {
         return;
       }
 
+      setStatus(newStatus);
       router.refresh();
     } catch {
       setServerError("Network error. Please try again.");
@@ -136,8 +138,24 @@ export function OrderDetailClient({ initialData }: OrderDetailClientProps) {
     }
   };
 
+  const handleUpdateStatus = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (status === initialData.status) return;
+    await updateStatusTo(status);
+  };
+
+  const handleCopyTxId = () => {
+    if (!initialData.paymentId) return;
+    navigator.clipboard.writeText(initialData.paymentId);
+    setCopiedTxId(true);
+    setTimeout(() => setCopiedTxId(false), 2000);
+  };
+
+  const isPending = initialData.status === "pending";
+
   return (
     <div>
+      {/* Header */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-display text-3xl font-bold text-brand-primary">
@@ -148,25 +166,206 @@ export function OrderDetailClient({ initialData }: OrderDetailClientProps) {
           </p>
         </div>
         <span
-          className={`inline-block rounded-full border px-2.5 py-0.5 text-xs font-medium ${initialData.badgeColor}`}
+          className={`inline-block rounded-full border px-3 py-1 text-xs font-semibold ${initialData.badgeColor}`}
         >
           {initialData.statusLabel}
         </span>
       </div>
 
-      <section className="mt-8 rounded-xl border border-brand-primary/15 bg-brand-bg p-6">
-        <h2 className="text-lg font-semibold text-brand-primary">
+      {/* Manual Verification Alert & Action (if pending) */}
+      {isPending && (
+        <section className="mt-6 rounded-2xl border-2 border-amber-300 bg-amber-50/80 p-6 shadow-sm">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-base font-bold text-amber-900">
+                ⚠️ Awaiting Manual Payment Verification
+              </h2>
+              <p className="mt-1 text-xs text-amber-800">
+                Please verify the customer&apos;s Transaction ID or payment screenshot against your bank account. Once verified, click below to confirm the order and notify the customer.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={saving}
+                onClick={() => updateStatusTo("confirmed")}
+                className="rounded-xl bg-green-700 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-green-800 disabled:opacity-60"
+              >
+                {saving ? "Confirming..." : "✓ Verify & Confirm Order"}
+              </button>
+              <button
+                type="button"
+                disabled={saving}
+                onClick={() => {
+                  if (
+                    window.confirm(
+                      "Are you sure you want to cancel this order? This will restore stock.",
+                    )
+                  ) {
+                    updateStatusTo("cancelled");
+                  }
+                }}
+                className="rounded-xl border border-red-300 bg-white px-4 py-2.5 text-xs font-semibold text-red-600 transition-colors hover:bg-red-50 disabled:opacity-60"
+              >
+                ✕ Cancel Order
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Payment & Verification Box */}
+      <section className="mt-6 rounded-2xl border border-brand-primary/15 bg-white p-6 shadow-sm">
+        <h2 className="font-display text-lg font-bold text-brand-primary">
+          Payment Proof & Verification
+        </h2>
+
+        <div className="mt-4 grid gap-6 sm:grid-cols-2">
+          {/* Payment Details */}
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between border-b border-brand-primary/5 pb-2">
+              <span className="text-brand-text/60">Payment Method:</span>
+              <span className="font-semibold text-brand-primary">
+                {initialData.paymentMethod === "UPI_QR"
+                  ? "UPI / QR Code Payment"
+                  : initialData.paymentMethod === "RAZORPAY"
+                    ? "Razorpay Online"
+                    : initialData.paymentMethod}
+              </span>
+            </div>
+
+            <div className="flex justify-between border-b border-brand-primary/5 pb-2">
+              <span className="text-brand-text/60">Total Order Amount:</span>
+              <span className="font-bold text-brand-primary">
+                {formatMoney(initialData.total)}
+              </span>
+            </div>
+
+            <div>
+              <span className="text-brand-text/60 block text-xs mb-1">
+                UPI Transaction ID / UTR:
+              </span>
+              {initialData.paymentId ? (
+                <div className="flex items-center justify-between gap-2 rounded-lg border border-brand-primary/15 bg-brand-bg px-3 py-2">
+                  <code className="font-mono text-sm font-bold text-brand-primary truncate">
+                    {initialData.paymentId}
+                  </code>
+                  <button
+                    type="button"
+                    onClick={handleCopyTxId}
+                    className="rounded bg-brand-primary/10 px-2 py-1 text-xs font-semibold text-brand-primary hover:bg-brand-primary hover:text-white"
+                  >
+                    {copiedTxId ? "Copied!" : "Copy"}
+                  </button>
+                </div>
+              ) : (
+                <span className="text-xs italic text-brand-text/40">
+                  No transaction ID entered (Screenshot attached below)
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Payment Proof Screenshot */}
+          <div>
+            <span className="text-brand-text/60 block text-xs mb-1">
+              Payment Screenshot / Receipt:
+            </span>
+            {initialData.paymentProof ? (
+              <div className="space-y-2">
+                <div
+                  onClick={() => setShowScreenshotModal(true)}
+                  className="group relative cursor-pointer overflow-hidden rounded-xl border-2 border-brand-gold/30 bg-brand-bg p-2 transition-all hover:border-brand-gold hover:shadow-md"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={initialData.paymentProof}
+                    alt="Payment Proof Screenshot"
+                    className="max-h-48 w-full rounded-lg object-contain"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 backdrop-blur-[2px] transition-opacity group-hover:opacity-100">
+                    <span className="rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-brand-dark shadow">
+                      🔍 Click to Zoom
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex justify-between text-xs">
+                  <a
+                    href={initialData.paymentProof}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-brand-gold hover:underline"
+                  >
+                    Open original in new tab &rarr;
+                  </a>
+                </div>
+              </div>
+            ) : (
+              <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-brand-primary/15 bg-brand-bg p-4 text-center text-xs text-brand-text/50">
+                No screenshot attached. Verified via UPI Transaction ID.
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Screenshot Lightbox Modal */}
+      {showScreenshotModal && initialData.paymentProof && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
+          onClick={() => setShowScreenshotModal(false)}
+        >
+          <div
+            className="relative max-h-[90vh] max-w-3xl overflow-hidden rounded-2xl bg-white p-4 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="font-display font-bold text-brand-primary">
+                Payment Screenshot — Order #{initialData.id.slice(-8)}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowScreenshotModal(false)}
+                className="rounded-full bg-brand-bg p-1.5 text-brand-text/60 hover:bg-brand-primary/10 hover:text-brand-primary"
+              >
+                ✕
+              </button>
+            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={initialData.paymentProof}
+              alt="Full Payment Proof"
+              className="max-h-[75vh] w-auto rounded-lg object-contain mx-auto"
+            />
+            <div className="mt-3 flex justify-end">
+              <a
+                href={initialData.paymentProof}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-lg bg-brand-primary px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-brand-primary/90"
+              >
+                Open Full Size in New Tab &rarr;
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Status Timeline */}
+      <section className="mt-6 rounded-2xl border border-brand-primary/15 bg-brand-bg p-6">
+        <h2 className="font-display text-lg font-bold text-brand-primary">
           Status timeline
         </h2>
         <ol className="relative mt-4">
           {initialData.timeline.map((step, index) => {
             const isLast = index === initialData.timeline.length - 1;
             return (
-              <li key={step.key} className="flex gap-4 pb-8 last:pb-0">
+              <li key={step.key} className="relative flex gap-4 pb-8 last:pb-0">
                 {!isLast && (
                   <span
                     aria-hidden
-                    className={`absolute left-[15px] top-8 h-[calc(100%-4rem)] w-0.5 ${
+                    className={`absolute left-[15px] top-8 h-[calc(100%-2rem)] w-0.5 ${
                       step.state === "completed"
                         ? "bg-brand-primary"
                         : "bg-brand-primary/15"
@@ -227,8 +426,9 @@ export function OrderDetailClient({ initialData }: OrderDetailClientProps) {
         </ol>
       </section>
 
-      <section className="mt-6 rounded-xl border border-brand-primary/15 bg-brand-bg p-6">
-        <h2 className="text-lg font-semibold text-brand-primary">
+      {/* Update Status Dropdown */}
+      <section className="mt-6 rounded-2xl border border-brand-primary/15 bg-brand-bg p-6">
+        <h2 className="font-display text-lg font-bold text-brand-primary">
           Update status
         </h2>
         <form onSubmit={handleUpdateStatus} className="mt-3 flex flex-wrap items-start gap-3">
@@ -270,9 +470,10 @@ export function OrderDetailClient({ initialData }: OrderDetailClientProps) {
         )}
       </section>
 
+      {/* Order Details & Customer */}
       <section className="mt-6 grid gap-6 border-t border-brand-primary/10 pt-6 md:grid-cols-2">
         <div>
-          <h2 className="text-lg font-semibold text-brand-primary">
+          <h2 className="font-display text-lg font-bold text-brand-primary">
             Order details
           </h2>
           <dl className="mt-4 space-y-3 text-sm">
@@ -284,13 +485,15 @@ export function OrderDetailClient({ initialData }: OrderDetailClientProps) {
             </div>
             <div className="flex justify-between gap-4">
               <dt className="text-brand-text/60">Payment method</dt>
-              <dd className="text-right font-medium uppercase text-brand-text">
-                {initialData.paymentMethod}
+              <dd className="text-right font-medium text-brand-text">
+                {initialData.paymentMethod === "UPI_QR"
+                  ? "UPI / QR Code"
+                  : initialData.paymentMethod}
               </dd>
             </div>
             {initialData.paymentId && (
               <div className="flex justify-between gap-4">
-                <dt className="text-brand-text/60">Payment id</dt>
+                <dt className="text-brand-text/60">Payment ID / UTR</dt>
                 <dd className="text-right font-mono text-xs text-brand-text/70">
                   {initialData.paymentId}
                 </dd>
@@ -306,7 +509,9 @@ export function OrderDetailClient({ initialData }: OrderDetailClientProps) {
         </div>
 
         <div>
-          <h2 className="text-lg font-semibold text-brand-primary">Customer</h2>
+          <h2 className="font-display text-lg font-bold text-brand-primary">
+            Customer
+          </h2>
           <div className="mt-4 space-y-1 text-sm text-brand-text">
             {initialData.userName && (
               <p className="font-medium">{initialData.userName}</p>
@@ -321,8 +526,9 @@ export function OrderDetailClient({ initialData }: OrderDetailClientProps) {
         </div>
       </section>
 
+      {/* Delivery Address */}
       <section className="mt-6 border-t border-brand-primary/10 pt-6">
-        <h2 className="text-lg font-semibold text-brand-primary">
+        <h2 className="font-display text-lg font-bold text-brand-primary">
           Delivery address
         </h2>
         <address className="mt-4 space-y-1 text-sm not-italic text-brand-text">
@@ -342,8 +548,9 @@ export function OrderDetailClient({ initialData }: OrderDetailClientProps) {
         </address>
       </section>
 
+      {/* Items in this order */}
       <section className="mt-8 border-t border-brand-primary/10 pt-6">
-        <h2 className="text-lg font-semibold text-brand-primary">
+        <h2 className="font-display text-lg font-bold text-brand-primary">
           Items in this order
         </h2>
         <ul className="mt-4 divide-y divide-brand-primary/10">

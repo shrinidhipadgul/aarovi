@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import {
   getTimeline,
-  statusLabel,
+  adminStatusLabel,
   statusBadgeColor,
 } from "@/lib/order-status";
 import { OrderDetailClient } from "./order-detail-client";
@@ -62,12 +62,13 @@ export default async function AdminOrderDetailPage({ params }: Props) {
     userName: order.user?.name ?? null,
     total: order.total,
     status: order.status,
-    statusLabel: statusLabel(order.status),
+    statusLabel: adminStatusLabel(order.status),
     badgeColor: statusBadgeColor(order.status),
     timeline: getTimeline(order.status),
     address: order.address,
     paymentMethod: order.paymentMethod,
     paymentId: order.paymentId,
+    paymentProof: order.paymentProof,
     items: order.items.map((item) => ({
       id: item.id,
       productId: item.productId,

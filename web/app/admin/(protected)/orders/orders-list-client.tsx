@@ -18,6 +18,7 @@ interface OrderRow {
   badgeColor: string;
   paymentMethod: string;
   paymentId: string | null;
+  paymentProof: string | null;
   itemCount: number;
   createdAt: string;
   updatedAt: string;
@@ -34,6 +35,8 @@ const formatDate = (iso: string) =>
     day: "numeric",
     month: "short",
     year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   }).format(new Date(iso));
 
 const formatMoney = (n: number) => `\u20B9${n.toLocaleString("en-IN")}`;
@@ -105,13 +108,13 @@ export function OrdersListClient({
           className="rounded-lg border border-brand-primary/15 bg-brand-bg px-3 py-2 text-sm text-brand-text outline-none transition-colors focus:border-brand-gold"
         >
           <option value="">All statuses</option>
-          {ORDER_STATUSES.map((s) => (
+          <option value="pending">Pending Verification</option>
+          {ORDER_STATUSES.filter((s) => s !== "pending").map((s) => (
             <option key={s} value={s}>
               {s.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase())}
             </option>
           ))}
           <option value="cancelled">Cancelled</option>
-          <option value="pending">Pending</option>
         </select>
         <button
           type="submit"
@@ -140,30 +143,45 @@ export function OrdersListClient({
             {orders.map((order) => (
               <tr
                 key={order.id}
-                className="border-b border-brand-primary/5 transition-colors hover:bg-brand-primary/[0.02]"
+                className={`border-b border-brand-primary/5 transition-colors hover:bg-brand-primary/[0.02] ${
+                  order.status === "pending" ? "bg-amber-50/40" : ""
+                }`}
               >
                 <td className="px-3 py-2">
-                  <span className="font-mono text-xs text-brand-text">
+                  <span className="font-mono text-xs text-brand-text font-semibold">
                     {order.id.slice(-8)}
                   </span>
                 </td>
                 <td className="max-w-[200px] truncate px-3 py-2 text-brand-text/80">
                   {order.userName ?? order.userEmail ?? "—"}
                 </td>
-                <td className="px-3 py-2 text-brand-text/80">
+                <td className="px-3 py-2 text-xs text-brand-text/80">
                   {formatDate(order.createdAt)}
                 </td>
                 <td className="px-3 py-2 text-brand-text/80">{order.itemCount}</td>
                 <td className="px-3 py-2 font-medium text-brand-text">
                   {formatMoney(order.total)}
                 </td>
-                <td className="px-3 py-2 uppercase text-brand-text/70">
-                  {order.paymentMethod}
+                <td className="px-3 py-2 text-xs text-brand-text/80">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-medium">
+                      {order.paymentMethod === "UPI_QR"
+                        ? "UPI / QR"
+                        : order.paymentMethod}
+                    </span>
+                    {order.paymentProof && (
+                      <span
+                        className="inline-flex items-center rounded bg-brand-gold/15 px-1.5 py-0.5 text-[10px] font-semibold text-brand-gold"
+                        title="Payment screenshot attached"
+                      >
+                        📷 Proof
+                      </span>
+                    )}
+                  </div>
                 </td>
                 <td className="px-3 py-2">
                   <span
                     className={`inline-block rounded-full border px-2.5 py-0.5 text-xs font-medium ${
-                      // Prefer the server-provided badgeColor; fall back to a fresh lookup.
                       order.badgeColor ?? statusBadgeColor(order.status)
                     }`}
                   >
@@ -173,9 +191,9 @@ export function OrdersListClient({
                 <td className="px-3 py-2">
                   <button
                     onClick={() => router.push(`/admin/orders/${order.id}`)}
-                    className="rounded-md px-2 py-1 text-xs font-medium text-brand-gold transition-colors hover:bg-brand-gold/10"
+                    className="rounded-md bg-brand-primary/10 px-2.5 py-1 text-xs font-semibold text-brand-primary transition-colors hover:bg-brand-primary hover:text-white"
                   >
-                    View
+                    {order.status === "pending" ? "Verify" : "View"}
                   </button>
                 </td>
               </tr>

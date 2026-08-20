@@ -18,135 +18,214 @@ export const POST = requireAuth(
   withErrorHandler(async (req: Request) => {
     const session = (await getSession())!;
 
-  const body = (await req.json()) as {
-    address: AddressInput;
-    paymentMethod?: string;
-    saveAddress?: boolean;
-  };
+    const body = (await req.json()) as {
+      address: AddressInput;
+      paymentMethod?: string;
+      transactionId?: string;
+      paymentProof?: string;
+      saveAddress?: boolean;
+    };
 
-  const paymentMethod = body.paymentMethod || "RAZORPAY";
-  if (paymentMethod !== "RAZORPAY") {
-    return errorResponse("Invalid payment method. Only online payments are accepted.", 400);
-  }
-
-  const addressErrors = validateAddress(body.address);
-  if (Object.keys(addressErrors).length > 0) {
-    const formattedErrors: Record<string, string[]> = {};
-    for (const [key, value] of Object.entries(addressErrors)) {
-      formattedErrors[key] = [value];
+    const paymentMethod = body.paymentMethod || "UPI_QR";
+    if (paymentMethod !== "UPI_QR" && paymentMethod !== "RAZORPAY") {
+      return errorResponse("Invalid payment method.", 400);
     }
-    return errorResponse("Invalid address", 400, formattedErrors);
-  }
 
-  const cartItems = await prisma.cartItem.findMany({
-    where: { userId: session.user.id },
-    select: {
-      id: true,
-      productId: true,
-      size: true,
-      quantity: true,
-      product: {
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          price: true,
-          images: true,
-          inStock: true,
-          stock: true,
+    const addressErrors = validateAddress(body.address);
+    if (Object.keys(addressErrors).length > 0) {
+      const formattedErrors: Record<string, string[]> = {};
+      for (const [key, value] of Object.entries(addressErrors)) {
+        formattedErrors[key] = [value];
+      }
+      return errorResponse("Invalid address", 400, formattedErrors);
+    }
+
+    // For manual UPI/QR payment, require either transaction ID or payment proof screenshot
+    if (paymentMethod === "UPI_QR") {
+      const txId = body.transactionId?.trim();
+      const proof = body.paymentProof?.trim();
+      if (!txId && !proof) {
+        return errorResponse(
+          "Please enter your UPI transaction ID or upload a payment screenshot.",
+          400,
+          {
+            payment: [
+              "Either transaction ID or payment screenshot is required.",
+            ],
+          },
+        );
+      }
+    }
+
+    const cartItems = await prisma.cartItem.findMany({
+      where: { userId: session.user.id },
+      select: {
+        id: true,
+        productId: true,
+        size: true,
+        quantity: true,
+        product: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            price: true,
+            images: true,
+            inStock: true,
+            stock: true,
+          },
         },
       },
-    },
-  });
-
-  if (cartItems.length === 0) {
-    return errorResponse("Your cart is empty", 400);
-  }
-
-  for (const item of cartItems) {
-    if (!item.product.inStock || item.product.stock < item.quantity) {
-      return errorResponse(
-        `Insufficient stock for ${item.product.name}`,
-        400,
-        { productId: [item.productId] },
-      );
-    }
-  }
-
-  const { subtotal, deliveryFee, total } = calculateTotals(
-    cartItems.map((item) => ({
-      price: item.product.price,
-      quantity: item.quantity,
-    })),
-  );
-
-  const addressData = {
-    fullName: body.address.fullName!,
-    phone: body.address.phone!,
-    line1: body.address.line1!,
-    city: body.address.city!,
-    state: body.address.state!,
-    pincode: body.address.pincode!,
-  };
-
-  const orderItems = cartItems.map((item) => ({
-    productId: item.productId,
-    size: item.size,
-    quantity: item.quantity,
-    price: item.product.price,
-  }));
-
-  if (!isRazorpayConfigured()) {
-    return errorResponse(
-      "Online payment is currently unavailable. Please try again later.",
-      503,
-    );
-  }
-
-  const pendingOrder = await prisma.$transaction(async (tx) => {
-    const created = await tx.order.create({
-      data: {
-        userId: session.user.id,
-        total,
-        status: "pending",
-        address: addressData,
-        paymentMethod: "RAZORPAY",
-        items: { create: orderItems },
-      },
-      select: { id: true },
     });
 
-    if (body.saveAddress) {
-      await tx.address.create({
-        data: {
-          userId: session.user.id,
-          ...addressData,
-        },
-      });
+    if (cartItems.length === 0) {
+      return errorResponse("Your cart is empty", 400);
     }
 
-    return created;
-  });
+    for (const item of cartItems) {
+      if (!item.product.inStock || item.product.stock < item.quantity) {
+        return errorResponse(
+          `Insufficient stock for ${item.product.name}`,
+          400,
+          { productId: [item.productId] },
+        );
+      }
+    }
 
-  const razorpayOrder = await createRazorpayOrder(total);
+    const { subtotal, deliveryFee, total } = calculateTotals(
+      cartItems.map((item) => ({
+        price: item.product.price,
+        quantity: item.quantity,
+      })),
+    );
 
-  await prisma.order.update({
-    where: { id: pendingOrder.id },
-    data: { paymentId: razorpayOrder.id },
-  });
+    const addressData = {
+      fullName: body.address.fullName!,
+      phone: body.address.phone!,
+      line1: body.address.line1!,
+      city: body.address.city!,
+      state: body.address.state!,
+      pincode: body.address.pincode!,
+    };
 
-  return successResponse(
-    {
-      orderId: pendingOrder.id,
-      razorpayOrderId: razorpayOrder.id,
-      amount: razorpayOrder.amount,
-      currency: razorpayOrder.currency,
-      keyId: process.env.RAZORPAY_KEY_ID,
-      subtotal,
-      deliveryFee,
-      total,
-    },
-    201,
-  );
+    const orderItems = cartItems.map((item) => ({
+      productId: item.productId,
+      size: item.size,
+      quantity: item.quantity,
+      price: item.product.price,
+    }));
+
+    // ——— UPI / QR Payment Flow (Active) ———
+    if (paymentMethod === "UPI_QR") {
+      const order = await prisma.$transaction(async (tx) => {
+        const created = await tx.order.create({
+          data: {
+            userId: session.user.id,
+            total,
+            status: "pending",
+            address: addressData,
+            paymentMethod: "UPI_QR",
+            paymentId: body.transactionId?.trim() || null,
+            paymentProof: body.paymentProof?.trim() || null,
+            items: { create: orderItems },
+          },
+          select: { id: true },
+        });
+
+        // Decrement product stock
+        for (const item of orderItems) {
+          const updated = await tx.product.update({
+            where: { id: item.productId },
+            data: { stock: { decrement: item.quantity } },
+            select: { stock: true },
+          });
+          if (updated.stock <= 0) {
+            await tx.product.update({
+              where: { id: item.productId },
+              data: { inStock: false },
+            });
+          }
+        }
+
+        // Clear customer cart
+        await tx.cartItem.deleteMany({ where: { userId: session.user.id } });
+
+        if (body.saveAddress) {
+          await tx.address.create({
+            data: {
+              userId: session.user.id,
+              ...addressData,
+            },
+          });
+        }
+
+        return created;
+      });
+
+      return successResponse(
+        {
+          orderId: order.id,
+          status: "pending",
+          subtotal,
+          deliveryFee,
+          total,
+        },
+        201,
+      );
+    }
+
+    // ——— Razorpay Online Payment Flow (Preserved / Dormant) ———
+    if (!isRazorpayConfigured()) {
+      return errorResponse(
+        "Online payment is currently unavailable. Please try again later.",
+        503,
+      );
+    }
+
+    const pendingOrder = await prisma.$transaction(async (tx) => {
+      const created = await tx.order.create({
+        data: {
+          userId: session.user.id,
+          total,
+          status: "pending",
+          address: addressData,
+          paymentMethod: "RAZORPAY",
+          items: { create: orderItems },
+        },
+        select: { id: true },
+      });
+
+      if (body.saveAddress) {
+        await tx.address.create({
+          data: {
+            userId: session.user.id,
+            ...addressData,
+          },
+        });
+      }
+
+      return created;
+    });
+
+    const razorpayOrder = await createRazorpayOrder(total);
+
+    await prisma.order.update({
+      where: { id: pendingOrder.id },
+      data: { paymentId: razorpayOrder.id },
+    });
+
+    return successResponse(
+      {
+        orderId: pendingOrder.id,
+        razorpayOrderId: razorpayOrder.id,
+        amount: razorpayOrder.amount,
+        currency: razorpayOrder.currency,
+        keyId: process.env.RAZORPAY_KEY_ID,
+        subtotal,
+        deliveryFee,
+        total,
+      },
+      201,
+    );
   }),
 );

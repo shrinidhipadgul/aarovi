@@ -1,4 +1,5 @@
 export const ORDER_STATUSES = [
+  "pending",
   "confirmed",
   "processing",
   "shipped",
@@ -15,7 +16,17 @@ export interface TimelineStep {
 }
 
 const FULL_STATUS_LABELS: Record<string, string> = {
-  pending: "Pending",
+  pending: "Order Placed",
+  confirmed: "Order Confirmed",
+  processing: "Processing",
+  shipped: "Shipped",
+  out_for_delivery: "Out for Delivery",
+  delivered: "Delivered",
+  cancelled: "Cancelled",
+};
+
+const ADMIN_STATUS_LABELS: Record<string, string> = {
+  pending: "Pending Verification",
   confirmed: "Order Confirmed",
   processing: "Processing",
   shipped: "Shipped",
@@ -26,6 +37,10 @@ const FULL_STATUS_LABELS: Record<string, string> = {
 
 export function statusLabel(status: string): string {
   return FULL_STATUS_LABELS[status] ?? status;
+}
+
+export function adminStatusLabel(status: string): string {
+  return ADMIN_STATUS_LABELS[status] ?? statusLabel(status);
 }
 
 const STATUS_BADGE_COLORS: Record<string, string> = {
@@ -65,13 +80,29 @@ export function isWritableOrderStatus(
 }
 
 export function getTimeline(currentStatus: string): TimelineStep[] {
+  if (currentStatus === "delivered") {
+    return ORDER_STATUSES.map((key) => ({
+      key,
+      label: FULL_STATUS_LABELS[key] ?? key,
+      state: "completed",
+    }));
+  }
+
   const currentIndex = isOrderStatus(currentStatus)
     ? ORDER_STATUSES.indexOf(currentStatus)
     : -1;
 
+  if (currentIndex === -1) {
+    return ORDER_STATUSES.map((key) => ({
+      key,
+      label: FULL_STATUS_LABELS[key] ?? key,
+      state: "upcoming",
+    }));
+  }
+
   return ORDER_STATUSES.map((key, index) => {
     let state: TimelineStep["state"];
-    if (currentIndex === -1 || index < currentIndex) {
+    if (index < currentIndex) {
       state = "completed";
     } else if (index === currentIndex) {
       state = "current";
