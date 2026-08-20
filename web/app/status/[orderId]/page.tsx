@@ -204,10 +204,22 @@ function OrderStatusView({ order }: { order: OrderWithItems }) {
             </div>
             <div className="flex justify-between gap-4">
               <dt className="text-brand-text/60">Payment method</dt>
-              <dd className="text-right font-medium uppercase text-brand-text">
-                {order.paymentMethod}
+              <dd className="text-right font-medium text-brand-text">
+                {order.paymentMethod === "UPI_QR"
+                  ? "UPI / QR Payment"
+                  : order.paymentMethod === "RAZORPAY"
+                    ? "Online Payment"
+                    : order.paymentMethod}
               </dd>
             </div>
+            {order.paymentId && (
+              <div className="flex justify-between gap-4">
+                <dt className="text-brand-text/60">Transaction ID</dt>
+                <dd className="text-right font-mono text-xs text-brand-text/80">
+                  {order.paymentId}
+                </dd>
+              </div>
+            )}
             <div className="flex justify-between gap-4">
               <dt className="text-brand-text/60">Total amount</dt>
               <dd className="text-right font-semibold text-brand-primary">

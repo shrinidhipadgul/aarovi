@@ -115,6 +115,7 @@ model Order {
   address       Json
   paymentMethod String
   paymentId     String?
+  paymentProof  String?
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 }
@@ -205,4 +206,11 @@ model CustomizationMedia {
   key         String
   contentType String
   createdAt   DateTime              @default(now())
+}
+
+model Setting {
+  key       String   @id
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

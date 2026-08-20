@@ -1,18 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { resetCart } from "@/lib/stores/cart";
-import {
-  DELIVERY_FEE,
-  validateAddress,
-} from "@/lib/checkout";
-import {
-  loadRazorpayScript,
-  openRazorpayCheckout,
-} from "@/lib/razorpay-client";
+import { DELIVERY_FEE, validateAddress } from "@/lib/checkout";
+/*
+ * Razorpay integration preserved for future reactivation:
+ * import { loadRazorpayScript, openRazorpayCheckout } from "@/lib/razorpay-client";
+ */
 
 interface CartItem {
   id: string;
@@ -47,6 +44,13 @@ interface AddressForm {
   pincode: string;
 }
 
+interface PaymentSettingsData {
+  qrCodeUrl: string;
+  upiId: string;
+  accountName: string;
+  instructions: string;
+}
+
 const EMPTY_ADDRESS: AddressForm = {
   fullName: "",
   phone: "",
@@ -71,9 +75,21 @@ export default function PlaceOrderPage() {
   const [address, setAddress] = useState<AddressForm>(EMPTY_ADDRESS);
   const [addressErrors, setAddressErrors] = useState<Record<string, string>>({});
   const [saveAddress, setSaveAddress] = useState(false);
-  const paymentMethod = "RAZORPAY";
+
+  // Payment settings & manual UPI states
+  const [paymentSettings, setPaymentSettings] =
+    useState<PaymentSettingsData | null>(null);
+  const [transactionId, setTransactionId] = useState("");
+  const [paymentProofFile, setPaymentProofFile] = useState<File | null>(null);
+  const [paymentProofPreview, setPaymentProofPreview] = useState<string | null>(
+    null,
+  );
+  const [copiedUpi, setCopiedUpi] = useState(false);
+  const [paymentError, setPaymentError] = useState("");
+
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!loggedIn) return;
@@ -84,9 +100,10 @@ export default function PlaceOrderPage() {
       setLoading(true);
       setError(false);
       try {
-        const [cartRes, addrRes] = await Promise.all([
+        const [cartRes, addrRes, settingsRes] = await Promise.all([
           fetch("/api/cart"),
           fetch("/api/addresses"),
+          fetch("/api/settings/payment"),
         ]);
         if (cancelled) return;
         if (cartRes.status === 401) {
@@ -97,9 +114,14 @@ export default function PlaceOrderPage() {
         if (!cartRes.ok || !addrRes.ok) throw new Error("Failed to load");
         const cartJson = await cartRes.json();
         const addrJson = await addrRes.json();
+        const settingsJson = settingsRes.ok ? await settingsRes.json() : null;
+
         if (!cancelled) {
           setItems(cartJson.data ?? []);
           setAddresses(addrJson.data ?? []);
+          if (settingsJson?.success && settingsJson.data) {
+            setPaymentSettings(settingsJson.data);
+          }
         }
       } catch {
         if (!cancelled) setError(true);
@@ -138,13 +160,55 @@ export default function PlaceOrderPage() {
     }
   };
 
-  const subtotal = items.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
+  const handleCopyUpi = useCallback(() => {
+    if (!paymentSettings?.upiId) return;
+    navigator.clipboard.writeText(paymentSettings.upiId);
+    setCopiedUpi(true);
+    setTimeout(() => setCopiedUpi(false), 2000);
+  }, [paymentSettings?.upiId]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setPaymentError("Please upload an image file (PNG, JPG, WebP).");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setPaymentError("Screenshot file size must be less than 5MB.");
+      return;
+    }
+
+    setPaymentError("");
+    setPaymentProofFile(file);
+    const localUrl = URL.createObjectURL(file);
+    setPaymentProofPreview(localUrl);
+  };
+
+  const handleRemoveProof = () => {
+    setPaymentProofFile(null);
+    if (paymentProofPreview) {
+      URL.revokeObjectURL(paymentProofPreview);
+      setPaymentProofPreview(null);
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const subtotal = items.reduce(
+    (sum, i) => sum + i.product.price * i.quantity,
+    0,
+  );
   const deliveryFee = items.length === 0 ? 0 : DELIVERY_FEE;
   const total = subtotal + deliveryFee;
 
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError("");
+    setPaymentError("");
 
     const errors = validateAddress(address);
     if (Object.keys(errors).length > 0) {
@@ -158,15 +222,53 @@ export default function PlaceOrderPage() {
       return;
     }
 
+    const trimmedTxId = transactionId.trim();
+    if (!trimmedTxId && !paymentProofFile) {
+      setPaymentError(
+        "Please enter your UPI transaction ID or attach a payment screenshot.",
+      );
+      setSubmitError(
+        "Please provide payment proof (transaction ID or screenshot).",
+      );
+      return;
+    }
+
     setSubmitting(true);
 
     try {
+      let uploadedProofUrl: string | undefined = undefined;
+
+      // 1. Upload screenshot if selected
+      if (paymentProofFile) {
+        const formData = new FormData();
+        formData.append("file", paymentProofFile);
+
+        const uploadRes = await fetch("/api/uploads/payment-proof", {
+          method: "POST",
+          body: formData,
+        });
+
+        const uploadJson = await uploadRes.json();
+        if (!uploadRes.ok || !uploadJson.success) {
+          setSubmitError(
+            uploadJson?.message || "Failed to upload payment screenshot.",
+          );
+          setSubmitting(false);
+          return;
+        }
+
+        uploadedProofUrl = uploadJson.data.publicUrl;
+      }
+
+      // 2. Create the order
       const createRes = await fetch("/api/orders/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           address,
-          paymentMethod,
+          paymentMethod: "UPI_QR",
+          transactionId: trimmedTxId || undefined,
+          paymentProof: uploadedProofUrl,
           saveAddress,
         }),
       });
@@ -194,53 +296,9 @@ export default function PlaceOrderPage() {
 
       const data = createJson.data;
 
-      await loadRazorpayScript();
-
-      openRazorpayCheckout({
-        key: data.keyId,
-        amount: data.amount,
-        currency: data.currency,
-        name: "Aarovi",
-        description: "Order Payment",
-        order_id: data.razorpayOrderId,
-        prefill: { name: address.fullName, contact: address.phone },
-        theme: { color: "#4F200D" },
-        handler: async (response) => {
-          try {
-            const verifyRes = await fetch("/api/orders/verify-payment", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                orderId: data.orderId,
-                razorpayOrderId: response.razorpay_order_id,
-                razorpayPaymentId: response.razorpay_payment_id,
-                razorpaySignature: response.razorpay_signature,
-              }),
-            });
-
-            if (!verifyRes.ok) {
-              const verifyJson = await verifyRes.json();
-              router.push(
-                `/place-order/failure?orderId=${data.orderId}&reason=${encodeURIComponent(verifyJson?.message ?? "Verification failed")}`,
-              );
-              return;
-            }
-
-            resetCart();
-            router.push(`/place-order/success?orderId=${data.orderId}`);
-          } catch {
-            router.push(
-              `/place-order/failure?orderId=${data.orderId}&reason=${encodeURIComponent("Payment verification error")}`,
-            );
-          }
-        },
-        modal: {
-          ondismiss: () => {
-            setSubmitting(false);
-            setSubmitError("Payment was cancelled. You can retry.");
-          },
-        },
-      });
+      // 3. Clear cart store & redirect to success page
+      resetCart();
+      router.push(`/place-order/success?orderId=${data.orderId}`);
     } catch {
       setSubmitting(false);
       setSubmitError("Something went wrong. Please try again.");
@@ -250,7 +308,9 @@ export default function PlaceOrderPage() {
   if (!loggedIn) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center px-4 py-20 text-center">
-        <h1 className="text-3xl font-semibold text-brand-primary">Checkout</h1>
+        <h1 className="font-display text-3xl font-semibold text-brand-primary">
+          Checkout
+        </h1>
         <p className="mt-3 text-brand-text/60">
           Sign in to place your order.
         </p>
@@ -271,10 +331,7 @@ export default function PlaceOrderPage() {
         <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_22rem]">
           <div className="space-y-4">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-16 rounded-lg bg-brand-primary/5"
-              />
+              <div key={i} className="h-16 rounded-lg bg-brand-primary/5" />
             ))}
           </div>
           <div className="h-64 rounded-xl bg-brand-primary/5" />
@@ -311,7 +368,9 @@ export default function PlaceOrderPage() {
   if (items.length === 0) {
     return (
       <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-semibold text-brand-primary">Checkout</h1>
+        <h1 className="font-display text-3xl font-semibold text-brand-primary">
+          Checkout
+        </h1>
         <div className="mt-10 flex flex-col items-center justify-center rounded-xl border border-dashed border-brand-primary/15 py-20 text-center">
           <p className="text-lg font-medium text-brand-text">
             Your cart is empty
@@ -330,18 +389,25 @@ export default function PlaceOrderPage() {
     );
   }
 
+  const qrImageUrl =
+    paymentSettings?.qrCodeUrl ||
+    "/WhatsApp Image 2026-08-20 at 10.45.41.jpeg";
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
-      <h1 className="text-3xl font-semibold text-brand-primary">Checkout</h1>
+      <h1 className="font-display text-3xl font-bold text-brand-primary">
+        Checkout
+      </h1>
 
       <form
         onSubmit={handlePlaceOrder}
         className="mt-8 grid gap-8 lg:grid-cols-[1fr_22rem]"
       >
         <div className="space-y-8">
-          <section>
-            <h2 className="text-lg font-semibold text-brand-primary">
-              Delivery Address
+          {/* 1. Delivery Address */}
+          <section className="rounded-2xl border border-brand-primary/15 bg-white p-6 shadow-sm">
+            <h2 className="font-display text-xl font-semibold text-brand-primary">
+              1. Delivery Address
             </h2>
 
             {addresses.length > 0 && (
@@ -423,32 +489,216 @@ export default function PlaceOrderPage() {
             </label>
           </section>
 
-          <section>
-            <h2 className="text-lg font-semibold text-brand-primary">
-              Payment Method
-            </h2>
-            <div className="mt-4 rounded-xl border border-brand-primary/15 bg-white p-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-brand-primary/10 text-brand-primary">
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
+          {/* 2. Scan & Pay via UPI */}
+          <section className="rounded-2xl border border-brand-primary/15 bg-white p-6 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="font-display text-xl font-semibold text-brand-primary">
+                2. Scan & Pay via UPI
+              </h2>
+              <span className="rounded-full bg-brand-gold/10 px-3 py-1 font-mono text-xs font-semibold text-brand-gold">
+                Amount to Pay: {formatMoney(total)}
+              </span>
+            </div>
+            <p className="mt-1 text-sm text-brand-text/60">
+              Scan the QR code with any UPI app (Google Pay, PhonePe, Paytm,
+              Cred, BHIM) to complete payment.
+            </p>
+
+            {/* QR Card */}
+            <div className="mt-6 flex flex-col items-center rounded-xl border border-brand-primary/15 bg-brand-bg p-6 text-center sm:flex-row sm:items-start sm:gap-8 sm:text-left">
+              {/* QR Image Container */}
+              <div className="relative flex-none overflow-hidden rounded-xl border-2 border-brand-gold/30 bg-white p-3 shadow-md">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={qrImageUrl}
+                  alt="Aarovi UPI Payment QR Code"
+                  className="h-52 w-52 object-contain"
+                />
+                <div className="mt-2 text-center">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-brand-text/50">
+                    Scan with any UPI app
+                  </span>
                 </div>
+              </div>
+
+              {/* Payment Details & Copy UPI */}
+              <div className="mt-4 flex flex-1 flex-col justify-between sm:mt-0">
                 <div>
-                  <p className="text-sm font-semibold text-brand-text">
-                    Online Payment (Razorpay)
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-brand-primary/10 px-3 py-1 text-xs font-medium text-brand-primary">
+                    <svg
+                      className="h-3.5 w-3.5 text-brand-gold"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                      />
+                    </svg>
+                    Verified Merchant: {paymentSettings?.accountName || "Aarovi"}
+                  </div>
+
+                  <p className="mt-3 text-sm text-brand-text/80">
+                    {paymentSettings?.instructions ||
+                      "Scan using your camera or UPI app, pay the exact order total, and enter the Transaction ID / UTR or upload the payment screenshot below."}
                   </p>
-                  <p className="text-xs text-brand-text/60">
-                    Pay securely using UPI, Credit/Debit Cards, Net Banking, or Wallets
-                  </p>
+
+                  {paymentSettings?.upiId && (
+                    <div className="mt-4 rounded-lg border border-brand-primary/10 bg-white p-3">
+                      <span className="block text-xs font-medium text-brand-text/50">
+                        UPI ID:
+                      </span>
+                      <div className="mt-1 flex items-center justify-between gap-2">
+                        <code className="font-mono text-sm font-semibold text-brand-primary">
+                          {paymentSettings.upiId}
+                        </code>
+                        <button
+                          type="button"
+                          onClick={handleCopyUpi}
+                          className="rounded-md bg-brand-primary/10 px-2.5 py-1 text-xs font-medium text-brand-primary transition-colors hover:bg-brand-primary hover:text-white"
+                        >
+                          {copiedUpi ? "Copied!" : "Copy UPI ID"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-4 flex flex-wrap items-center gap-2 pt-2 text-[11px] text-brand-text/50">
+                  <span>Accepted:</span>
+                  <span className="rounded bg-white px-2 py-0.5 border border-brand-primary/10">
+                    Google Pay
+                  </span>
+                  <span className="rounded bg-white px-2 py-0.5 border border-brand-primary/10">
+                    PhonePe
+                  </span>
+                  <span className="rounded bg-white px-2 py-0.5 border border-brand-primary/10">
+                    Paytm
+                  </span>
+                  <span className="rounded bg-white px-2 py-0.5 border border-brand-primary/10">
+                    BHIM
+                  </span>
+                  <span className="rounded bg-white px-2 py-0.5 border border-brand-primary/10">
+                    Cred
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Payment Proof Inputs */}
+            <div className="mt-6 border-t border-brand-primary/10 pt-6">
+              <h3 className="text-sm font-semibold text-brand-primary">
+                Payment Verification Details
+              </h3>
+              <p className="mt-0.5 text-xs text-brand-text/60">
+                Provide either your 12-digit UPI Transaction ID (UTR) or attach
+                a screenshot of the completed payment (or both).
+              </p>
+
+              {paymentError && (
+                <div className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-600">
+                  {paymentError}
+                </div>
+              )}
+
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                {/* Transaction ID Input */}
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-brand-text">
+                    UPI Transaction ID / UTR (Optional if screenshot attached)
+                  </label>
+                  <input
+                    type="text"
+                    value={transactionId}
+                    onChange={(e) => {
+                      setTransactionId(e.target.value);
+                      if (paymentError) setPaymentError("");
+                    }}
+                    placeholder="e.g. 423456789012"
+                    className="w-full rounded-lg border border-brand-primary/15 bg-brand-bg px-4 py-2.5 text-sm text-brand-text outline-none transition-colors focus:border-brand-gold"
+                  />
+                  <span className="mt-1 block text-[11px] text-brand-text/50">
+                    Found on your UPI app payment receipt
+                  </span>
+                </div>
+
+                {/* Screenshot Upload */}
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-brand-text">
+                    Payment Screenshot (Optional if transaction ID entered)
+                  </label>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+
+                  {paymentProofPreview ? (
+                    <div className="flex items-center gap-3 rounded-lg border border-brand-gold/30 bg-brand-gold/5 p-2">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={paymentProofPreview}
+                        alt="Screenshot Preview"
+                        className="h-12 w-12 rounded object-cover border border-brand-gold/20"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-medium text-brand-text">
+                          {paymentProofFile?.name}
+                        </p>
+                        <p className="text-[11px] text-brand-text/50">
+                          {paymentProofFile
+                            ? `${(paymentProofFile.size / 1024).toFixed(0)} KB`
+                            : ""}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleRemoveProof}
+                        className="rounded p-1 text-xs text-red-500 hover:bg-red-50"
+                        title="Remove"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-brand-primary/20 bg-brand-bg px-4 py-2.5 text-xs font-medium text-brand-text/70 transition-colors hover:border-brand-gold hover:bg-brand-gold/5"
+                    >
+                      <svg
+                        className="h-4 w-4 text-brand-gold"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                      Upload Payment Screenshot
+                    </button>
+                  )}
+                  <span className="mt-1 block text-[11px] text-brand-text/50">
+                    PNG, JPG or WebP up to 5MB
+                  </span>
                 </div>
               </div>
             </div>
           </section>
 
-          <section>
-            <h2 className="text-lg font-semibold text-brand-primary">
-              Order Summary
+          {/* 3. Order Summary Items */}
+          <section className="rounded-2xl border border-brand-primary/15 bg-white p-6 shadow-sm">
+            <h2 className="font-display text-xl font-semibold text-brand-primary">
+              3. Order Summary
             </h2>
             <ul className="mt-4 divide-y divide-brand-primary/10">
               {items.map((item) => {
@@ -504,8 +754,9 @@ export default function PlaceOrderPage() {
           </section>
         </div>
 
+        {/* Sticky Sidebar */}
         <div className="lg:sticky lg:top-24 lg:self-start">
-          <div className="rounded-xl border border-brand-primary/10 bg-white p-6">
+          <div className="rounded-2xl border border-brand-primary/10 bg-white p-6 shadow-sm">
             {submitError && (
               <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
                 {submitError}
@@ -515,15 +766,17 @@ export default function PlaceOrderPage() {
               <span className="text-brand-text">Total</span>
               <span className="text-brand-primary">{formatMoney(total)}</span>
             </div>
+
             <button
               type="submit"
               disabled={submitting}
-              className="w-full rounded-lg bg-brand-primary px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-xl bg-brand-primary px-4 py-3.5 text-sm font-semibold text-white transition-all hover:bg-brand-primary/90 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {submitting ? "Processing..." : "Pay & Place Order"}
+              {submitting ? "Placing Order..." : "Place Order"}
             </button>
+
             <p className="mt-3 text-center text-xs text-brand-text/60">
-              By placing your order you agree to our terms.
+              By placing your order you agree to Aarovi&apos;s terms and policies.
             </p>
           </div>
         </div>

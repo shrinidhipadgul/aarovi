@@ -15,7 +15,17 @@ export interface TimelineStep {
 }
 
 const FULL_STATUS_LABELS: Record<string, string> = {
-  pending: "Pending",
+  pending: "Order Placed",
+  confirmed: "Order Confirmed",
+  processing: "Processing",
+  shipped: "Shipped",
+  out_for_delivery: "Out for Delivery",
+  delivered: "Delivered",
+  cancelled: "Cancelled",
+};
+
+const ADMIN_STATUS_LABELS: Record<string, string> = {
+  pending: "Pending Verification",
   confirmed: "Order Confirmed",
   processing: "Processing",
   shipped: "Shipped",
@@ -26,6 +36,10 @@ const FULL_STATUS_LABELS: Record<string, string> = {
 
 export function statusLabel(status: string): string {
   return FULL_STATUS_LABELS[status] ?? status;
+}
+
+export function adminStatusLabel(status: string): string {
+  return ADMIN_STATUS_LABELS[status] ?? statusLabel(status);
 }
 
 const STATUS_BADGE_COLORS: Record<string, string> = {

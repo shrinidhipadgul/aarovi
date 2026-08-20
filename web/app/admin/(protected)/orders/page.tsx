@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
-import { statusLabel, statusBadgeColor } from "@/lib/order-status";
+import { adminStatusLabel, statusBadgeColor } from "@/lib/order-status";
 import { OrdersListClient } from "./orders-list-client";
 
 export const metadata: Metadata = {
@@ -49,10 +49,11 @@ export default async function AdminOrdersPage() {
     userName: order.user?.name ?? null,
     total: order.total,
     status: order.status,
-    statusLabel: statusLabel(order.status),
+    statusLabel: adminStatusLabel(order.status),
     badgeColor: statusBadgeColor(order.status),
     paymentMethod: order.paymentMethod,
     paymentId: order.paymentId,
+    paymentProof: order.paymentProof,
     itemCount: order.items.reduce((sum, i) => sum + i.quantity, 0),
     createdAt: order.createdAt.toISOString(),
     updatedAt: order.updatedAt.toISOString(),

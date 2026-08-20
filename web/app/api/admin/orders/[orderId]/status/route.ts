@@ -17,6 +17,7 @@ import {
   isEmailConfigured,
   sendOrderCancellationEmail,
   sendOrderStatusUpdateEmail,
+  sendOrderConfirmationEmail,
 } from "@/lib/email";
 
 interface OrderStatusParamsCtx {
@@ -42,7 +43,9 @@ const updateOrderStatus = async (
 
   if (typeof body.status !== "string" || !isWritableOrderStatus(body.status)) {
     return errorResponse("Validation failed", 400, {
-      status: ["Status must be one of: confirmed, processing, shipped, out_for_delivery, delivered, cancelled"],
+      status: [
+        "Status must be one of: confirmed, processing, shipped, out_for_delivery, delivered, cancelled",
+      ],
     });
   }
 
@@ -56,42 +59,68 @@ const updateOrderStatus = async (
     });
   }
 
-  const order = await prisma.order.update({
-    where: { id: orderId },
-    data: { status: body.status },
-    include: {
-      items: {
-        select: {
-          id: true,
-          productId: true,
-          size: true,
-          quantity: true,
-          price: true,
-          product: {
-            select: {
-              id: true,
-              name: true,
-              slug: true,
-              images: true,
+  const newStatus = body.status;
+  const previousStatus = existing.status;
+
+  const order = await prisma.$transaction(async (tx) => {
+    // If order was cancelled and now reopened, or newly cancelled, handle stock
+    if (newStatus === "cancelled" && previousStatus !== "cancelled") {
+      const items = await tx.orderItem.findMany({
+        where: { orderId },
+        select: { productId: true, quantity: true },
+      });
+      for (const item of items) {
+        await tx.product.update({
+          where: { id: item.productId },
+          data: { stock: { increment: item.quantity }, inStock: true },
+        });
+      }
+    }
+
+    return tx.order.update({
+      where: { id: orderId },
+      data: { status: newStatus },
+      include: {
+        items: {
+          select: {
+            id: true,
+            productId: true,
+            size: true,
+            quantity: true,
+            price: true,
+            product: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                images: true,
+              },
             },
           },
         },
+        user: { select: { id: true, email: true, name: true } },
       },
-      user: { select: { id: true, email: true, name: true } },
-    },
+    });
   });
-
-  const newStatus = body.status;
 
   after(async () => {
     if (!isEmailConfigured()) return;
     if (!order.user?.email) return;
     try {
-      const result =
-        newStatus === "cancelled"
-          ? await sendOrderCancellationEmail(order)
-          : await sendOrderStatusUpdateEmail(order, newStatus);
-      if (!result.ok && result.error !== "RESEND_API_KEY not set — email skipped") {
+      let result;
+      if (newStatus === "cancelled") {
+        result = await sendOrderCancellationEmail(order);
+      } else if (newStatus === "confirmed" && previousStatus === "pending") {
+        result = await sendOrderConfirmationEmail(order);
+      } else {
+        result = await sendOrderStatusUpdateEmail(order, newStatus);
+      }
+
+      if (
+        result &&
+        !result.ok &&
+        result.error !== "RESEND_API_KEY not set — email skipped"
+      ) {
         console.error("[email] order-status-update failed", {
           orderId: order.id,
           newStatus,

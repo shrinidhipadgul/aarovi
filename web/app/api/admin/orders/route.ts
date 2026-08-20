@@ -5,6 +5,7 @@ import { successResponse } from "@/lib/api-response";
 import {
   ORDER_STATUSES,
   statusLabel,
+  adminStatusLabel,
   statusBadgeColor,
 } from "@/lib/order-status";
 
@@ -71,10 +72,11 @@ const listOrders = async (req: Request) => {
     userName: order.user?.name ?? null,
     total: order.total,
     status: order.status,
-    statusLabel: statusLabel(order.status),
+    statusLabel: adminStatusLabel(order.status),
     badgeColor: statusBadgeColor(order.status),
     paymentMethod: order.paymentMethod,
     paymentId: order.paymentId,
+    paymentProof: order.paymentProof,
     itemCount: order.items.reduce((sum, i) => sum + i.quantity, 0),
     createdAt: order.createdAt.toISOString(),
     updatedAt: order.updatedAt.toISOString(),
