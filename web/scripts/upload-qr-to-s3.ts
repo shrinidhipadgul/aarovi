@@ -9,10 +9,6 @@ import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 const BUCKET = process.env.S3_BUCKET_NAME ?? "aarovi-storage-s3";
 const REGION = process.env.AWS_REGION ?? "ap-southeast-2";
 const PREFIX = (process.env.S3_KEY_PREFIX ?? "").replace(/\/+$/, "");
-const BASE_URL = (
-  process.env.S3_PUBLIC_BASE_URL ??
-  `https://${BUCKET}.s3.${REGION}.amazonaws.com`
-).replace(/\/+$/, "");
 
 async function main() {
   const pool = new Pool({
@@ -47,7 +43,11 @@ async function main() {
       }),
     );
 
-    const publicUrl = `${BASE_URL}/${key}`;
+    const baseUrl = process.env.S3_PUBLIC_BASE_URL ?? process.env.NEXT_PUBLIC_S3_PUBLIC_BASE_URL;
+    const publicUrl = baseUrl
+      ? `${baseUrl.replace(/\/+$/, "")}/${key}`
+      : `/api/uploads/file?key=${encodeURIComponent(key)}`;
+
     console.log(`Uploaded successfully! Public URL: ${publicUrl}`);
 
     console.log("Updating payment_qr_url in database Setting table...");
@@ -57,7 +57,7 @@ async function main() {
       create: { key: "payment_qr_url", value: publicUrl },
     });
 
-    console.log("Done! payment_qr_url configured to S3 URL.");
+    console.log("Done! payment_qr_url configured successfully.");
   } catch (err) {
     console.error("Error uploading QR to S3:", err);
   } finally {

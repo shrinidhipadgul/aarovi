@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
+import { getPublicUrl } from "@/lib/uploads/storage";
 
-export const DEFAULT_PAYMENT_QR_URL =
-  "/WhatsApp Image 2026-08-20 at 10.45.41.jpeg";
+export const DEFAULT_PAYMENT_QR_URL = "/images/payment-qr.jpeg";
 export const DEFAULT_UPI_ID = "";
 export const DEFAULT_ACCOUNT_NAME = "Aarovi";
 export const DEFAULT_PAYMENT_INSTRUCTIONS =
@@ -53,9 +53,10 @@ export async function getPaymentSettings(): Promise<PaymentSettings> {
     });
 
     const map = new Map(records.map((r) => [r.key, r.value]));
+    const rawQr = map.get("payment_qr_url") || DEFAULT_PAYMENT_QR_URL;
 
     return {
-      qrCodeUrl: map.get("payment_qr_url") || DEFAULT_PAYMENT_QR_URL,
+      qrCodeUrl: getPublicUrl(rawQr),
       upiId: map.get("payment_upi_id") || DEFAULT_UPI_ID,
       accountName: map.get("payment_account_name") || DEFAULT_ACCOUNT_NAME,
       instructions:

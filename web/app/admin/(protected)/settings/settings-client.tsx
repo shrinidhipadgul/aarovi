@@ -155,6 +155,12 @@ export function SettingsClient({ initialPayment }: SettingsClientProps) {
                 src={qrCodeUrl}
                 alt="Current QR Code"
                 className="h-44 w-44 object-contain"
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  if (target.src !== "/images/payment-qr.jpeg") {
+                    target.src = "/images/payment-qr.jpeg";
+                  }
+                }}
               />
               <div className="mt-2 text-center">
                 <span className="font-mono text-[10px] uppercase text-brand-text/50">

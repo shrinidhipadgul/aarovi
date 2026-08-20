@@ -513,6 +513,12 @@ export default function PlaceOrderPage() {
                   src={qrImageUrl}
                   alt="Aarovi UPI Payment QR Code"
                   className="h-52 w-52 object-contain"
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    if (target.src !== "/images/payment-qr.jpeg") {
+                      target.src = "/images/payment-qr.jpeg";
+                    }
+                  }}
                 />
                 <div className="mt-2 text-center">
                   <span className="font-mono text-[10px] uppercase tracking-wider text-brand-text/50">

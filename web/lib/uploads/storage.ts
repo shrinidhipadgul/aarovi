@@ -7,18 +7,38 @@ export interface PresignedUpload {
 export function getPublicUrl(key: string): string {
   if (!key) return "";
   if (
-    key.startsWith("http://") ||
-    key.startsWith("https://") ||
     key.startsWith("blob:") ||
     key.startsWith("/api/uploads/file") ||
     key.startsWith("/images/") ||
-    key.startsWith("/uploads/")
+    key.startsWith("/uploads/") ||
+    key.startsWith("/WhatsApp")
   ) {
     return key;
   }
-  const cleanKey = key.replace(/^\/+/, "");
+
   const base =
     process.env.NEXT_PUBLIC_S3_PUBLIC_BASE_URL ?? process.env.S3_PUBLIC_BASE_URL;
+
+  // If it's a full http/https URL
+  if (key.startsWith("http://") || key.startsWith("https://")) {
+    if (base && key.startsWith(base)) {
+      return key;
+    }
+    // If it's a direct AWS S3 URL and no public CDN base is configured, proxy it
+    if (
+      key.includes(".s3.") ||
+      key.includes(".s3-") ||
+      key.includes(".amazonaws.com")
+    ) {
+      const extracted = extractKey(key);
+      if (extracted) {
+        return `/api/uploads/file?key=${encodeURIComponent(extracted)}`;
+      }
+    }
+    return key;
+  }
+
+  const cleanKey = key.replace(/^\/+/, "");
   if (base) {
     const cleanBase = base.replace(/\/+$/, "");
     return `${cleanBase}/${cleanKey}`;
