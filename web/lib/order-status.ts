@@ -1,4 +1,5 @@
 export const ORDER_STATUSES = [
+  "pending",
   "confirmed",
   "processing",
   "shipped",
@@ -79,13 +80,29 @@ export function isWritableOrderStatus(
 }
 
 export function getTimeline(currentStatus: string): TimelineStep[] {
+  if (currentStatus === "delivered") {
+    return ORDER_STATUSES.map((key) => ({
+      key,
+      label: FULL_STATUS_LABELS[key] ?? key,
+      state: "completed",
+    }));
+  }
+
   const currentIndex = isOrderStatus(currentStatus)
     ? ORDER_STATUSES.indexOf(currentStatus)
     : -1;
 
+  if (currentIndex === -1) {
+    return ORDER_STATUSES.map((key) => ({
+      key,
+      label: FULL_STATUS_LABELS[key] ?? key,
+      state: "upcoming",
+    }));
+  }
+
   return ORDER_STATUSES.map((key, index) => {
     let state: TimelineStep["state"];
-    if (currentIndex === -1 || index < currentIndex) {
+    if (index < currentIndex) {
       state = "completed";
     } else if (index === currentIndex) {
       state = "current";

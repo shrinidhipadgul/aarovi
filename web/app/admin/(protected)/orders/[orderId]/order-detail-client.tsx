@@ -361,11 +361,11 @@ export function OrderDetailClient({ initialData }: OrderDetailClientProps) {
           {initialData.timeline.map((step, index) => {
             const isLast = index === initialData.timeline.length - 1;
             return (
-              <li key={step.key} className="flex gap-4 pb-8 last:pb-0">
+              <li key={step.key} className="relative flex gap-4 pb-8 last:pb-0">
                 {!isLast && (
                   <span
                     aria-hidden
-                    className={`absolute left-[15px] top-8 h-[calc(100%-4rem)] w-0.5 ${
+                    className={`absolute left-[15px] top-8 h-[calc(100%-2rem)] w-0.5 ${
                       step.state === "completed"
                         ? "bg-brand-primary"
                         : "bg-brand-primary/15"

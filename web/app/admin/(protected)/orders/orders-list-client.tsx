@@ -109,7 +109,7 @@ export function OrdersListClient({
         >
           <option value="">All statuses</option>
           <option value="pending">Pending Verification</option>
-          {ORDER_STATUSES.map((s) => (
+          {ORDER_STATUSES.filter((s) => s !== "pending").map((s) => (
             <option key={s} value={s}>
               {s.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase())}
             </option>
