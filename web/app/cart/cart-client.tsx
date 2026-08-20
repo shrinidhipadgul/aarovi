@@ -16,6 +16,7 @@ import {
   useLocalCartItems,
   updateLocalCartQuantity,
   removeFromLocalCart,
+  pruneLocalCart,
 } from "@/lib/stores/local-cart";
 import { calculateTotals } from "@/lib/checkout";
 
@@ -43,6 +44,24 @@ export default function CartPage() {
       fetchCart().catch(() => setError(true));
     }
   }, [loggedIn, loaded]);
+
+  useEffect(() => {
+    if (!loggedIn && localItems.length > 0) {
+      const ids = localItems.map((i) => i.productId);
+      fetch("/api/products/active", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids }),
+      })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((json) => {
+          if (json?.data?.activeIds && Array.isArray(json.data.activeIds)) {
+            pruneLocalCart(json.data.activeIds);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [loggedIn, localItems]);
 
   useEffect(() => {
     const timers = debounceTimers.current;

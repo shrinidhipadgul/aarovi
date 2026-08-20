@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slugify";
 import { requireAdmin } from "@/lib/api-require-admin";
@@ -172,6 +173,16 @@ const createProduct = async (req: Request) => {
       featured: featured ?? false,
     },
   });
+
+  try {
+    revalidatePath("/", "page");
+    revalidatePath("/shop", "page");
+    revalidatePath("/shop/collection", "page");
+    revalidatePath("/admin/products", "page");
+    revalidatePath("/sitemap.xml");
+  } catch (err) {
+    console.error("Cache revalidation error:", err);
+  }
 
   return successResponse(product, 201);
 };

@@ -62,6 +62,22 @@ export function clearRecentlyViewed() {
   }
 }
 
+export function pruneRecentlyViewed(activeIds: string[]) {
+  if (typeof window === "undefined") return;
+  try {
+    const activeSet = new Set(activeIds);
+    const stored = getRecentlyViewed();
+    const next = stored.filter((p) => activeSet.has(p.id));
+    if (next.length !== stored.length) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      cached = next;
+      window.dispatchEvent(new Event(CHANGE_EVENT));
+    }
+  } catch {
+    /* localStorage not available */
+  }
+}
+
 export function subscribeToChanges(callback: () => void) {
   if (typeof window === "undefined") return () => {};
   window.addEventListener(CHANGE_EVENT, callback);

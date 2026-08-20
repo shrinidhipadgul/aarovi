@@ -57,7 +57,7 @@ export const POST = requireAuth(
       }
     }
 
-    const cartItems = await prisma.cartItem.findMany({
+    const rawCartItems = await prisma.cartItem.findMany({
       where: { userId: session.user.id },
       select: {
         id: true,
@@ -73,14 +73,42 @@ export const POST = requireAuth(
             images: true,
             inStock: true,
             stock: true,
+            deletedAt: true,
           },
         },
       },
     });
 
-    if (cartItems.length === 0) {
+    if (rawCartItems.length === 0) {
       return errorResponse("Your cart is empty", 400);
     }
+
+    // Check if any product in the cart was deleted or no longer exists
+    const hasDeletedItems = rawCartItems.some(
+      (item) => !item.product || item.product.deletedAt !== null,
+    );
+
+    if (hasDeletedItems) {
+      const deletedProductIds = rawCartItems
+        .filter((item) => !item.product || item.product.deletedAt !== null)
+        .map((item) => item.productId);
+
+      if (deletedProductIds.length > 0) {
+        await prisma.cartItem.deleteMany({
+          where: {
+            userId: session.user.id,
+            productId: { in: deletedProductIds },
+          },
+        });
+      }
+
+      return errorResponse(
+        "One or more items in your cart are no longer available. Your cart has been updated. Please review before proceeding.",
+        400,
+      );
+    }
+
+    const cartItems = rawCartItems;
 
     for (const item of cartItems) {
       if (!item.product.inStock || item.product.stock < item.quantity) {

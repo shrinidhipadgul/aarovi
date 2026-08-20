@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import ProductCard from "@/components/product-card";
 import {
   getRecentlyViewed,
   clearRecentlyViewed,
+  pruneRecentlyViewed,
+  subscribeToChanges,
   type RecentlyViewedProduct,
 } from "@/lib/recently-viewed";
 
@@ -12,15 +14,35 @@ interface RecentlyViewedProps {
   excludeId?: string;
 }
 
+const SERVER_SNAPSHOT: RecentlyViewedProduct[] = [];
+
 export default function RecentlyViewed({ excludeId }: RecentlyViewedProps) {
-  const [products, setProducts] = useState<RecentlyViewedProduct[]>([]);
+  const products = useSyncExternalStore(
+    subscribeToChanges,
+    getRecentlyViewed,
+    () => SERVER_SNAPSHOT,
+  );
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setProducts(getRecentlyViewed());
-    }, 0);
-    return () => clearTimeout(timer);
-  }, []);
+    if (products.length > 0) {
+      const ids = products.map((p) => p.id);
+      fetch("/api/products/active", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids }),
+      })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((json) => {
+          if (json?.data?.activeIds && Array.isArray(json.data.activeIds)) {
+            const activeIds: string[] = json.data.activeIds;
+            pruneRecentlyViewed(activeIds);
+          }
+        })
+        .catch(() => {
+          /* ignore network errors */
+        });
+    }
+  }, [products]);
 
   const filtered = excludeId
     ? products.filter((p) => p.id !== excludeId)
@@ -30,7 +52,6 @@ export default function RecentlyViewed({ excludeId }: RecentlyViewedProps) {
 
   const handleClear = () => {
     clearRecentlyViewed();
-    setProducts([]);
   };
 
   return (

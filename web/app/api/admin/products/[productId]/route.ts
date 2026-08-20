@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/api-require-admin";
 import { withErrorHandler } from "@/lib/with-error-handler";
@@ -131,6 +132,17 @@ const updateProduct = async (req: Request) => {
     data,
   });
 
+  try {
+    revalidatePath("/", "page");
+    revalidatePath("/shop", "page");
+    revalidatePath("/shop/collection", "page");
+    revalidatePath(`/product/${productId}`, "page");
+    revalidatePath("/admin/products", "page");
+    revalidatePath("/sitemap.xml");
+  } catch (err) {
+    console.error("Cache revalidation error:", err);
+  }
+
   return successResponse(product);
 };
 
@@ -147,13 +159,44 @@ const deleteProduct = async (req: Request) => {
     return notFoundResponse("Product");
   }
 
-  const product = await prisma.product.update({
-    where: { id: productId },
-    data: {
-      deletedAt: new Date(),
-      slug: `${existing.slug}-deleted-${Date.now()}`,
-    },
+  const product = await prisma.$transaction(async (tx) => {
+    // 1. Soft-delete the product and reset visibility flags
+    const updated = await tx.product.update({
+      where: { id: productId },
+      data: {
+        deletedAt: new Date(),
+        slug: `${existing.slug}-deleted-${Date.now()}`,
+        featured: false,
+        inStock: false,
+        stock: 0,
+      },
+    });
+
+    // 2. Cascade delete active cart items referencing this product
+    await tx.cartItem.deleteMany({
+      where: { productId },
+    });
+
+    // 3. Cascade delete active wishlist items referencing this product
+    await tx.wishlistItem.deleteMany({
+      where: { productId },
+    });
+
+    return updated;
   });
+
+  // 4. Invalidate Next.js cache so storefront pages immediately update
+  try {
+    revalidatePath("/", "page");
+    revalidatePath("/shop", "page");
+    revalidatePath("/shop/collection", "page");
+    revalidatePath("/shop/[subcategory]", "page");
+    revalidatePath(`/product/${productId}`, "page");
+    revalidatePath("/admin/products", "page");
+    revalidatePath("/sitemap.xml");
+  } catch (err) {
+    console.error("Cache revalidation error:", err);
+  }
 
   return successResponse(product);
 };
