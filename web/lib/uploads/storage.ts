@@ -10,8 +10,7 @@ export function getPublicUrl(key: string): string {
     key.startsWith("blob:") ||
     key.startsWith("/api/uploads/file") ||
     key.startsWith("/images/") ||
-    key.startsWith("/uploads/") ||
-    key.startsWith("/WhatsApp")
+    key.startsWith("/uploads/")
   ) {
     return key;
   }

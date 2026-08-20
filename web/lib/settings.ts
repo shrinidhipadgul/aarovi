@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getPublicUrl } from "@/lib/uploads/storage";
 
-export const DEFAULT_PAYMENT_QR_URL = "/images/payment-qr.jpeg";
+export const DEFAULT_PAYMENT_QR_URL = getPublicUrl("settings/payment-qr.jpeg");
 export const DEFAULT_UPI_ID = "";
 export const DEFAULT_ACCOUNT_NAME = "Aarovi";
 export const DEFAULT_PAYMENT_INSTRUCTIONS =

@@ -389,9 +389,7 @@ export default function PlaceOrderPage() {
     );
   }
 
-  const qrImageUrl =
-    paymentSettings?.qrCodeUrl ||
-    "/WhatsApp Image 2026-08-20 at 10.45.41.jpeg";
+  const qrImageUrl = paymentSettings?.qrCodeUrl || "";
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
@@ -509,17 +507,17 @@ export default function PlaceOrderPage() {
               {/* QR Image Container */}
               <div className="relative flex-none overflow-hidden rounded-xl border-2 border-brand-gold/30 bg-white p-3 shadow-md">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={qrImageUrl}
-                  alt="Aarovi UPI Payment QR Code"
-                  className="h-52 w-52 object-contain"
-                  onError={(e) => {
-                    const target = e.currentTarget;
-                    if (target.src !== "/images/payment-qr.jpeg") {
-                      target.src = "/images/payment-qr.jpeg";
-                    }
-                  }}
-                />
+                {qrImageUrl ? (
+                  <img
+                    src={qrImageUrl}
+                    alt="Aarovi UPI Payment QR Code"
+                    className="h-52 w-52 object-contain"
+                  />
+                ) : (
+                  <div className="flex h-52 w-52 items-center justify-center bg-brand-primary/5 text-xs text-brand-text/40">
+                    Loading QR...
+                  </div>
+                )}
                 <div className="mt-2 text-center">
                   <span className="font-mono text-[10px] uppercase tracking-wider text-brand-text/50">
                     Scan with any UPI app

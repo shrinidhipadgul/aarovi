@@ -151,17 +151,17 @@ export function SettingsClient({ initialPayment }: SettingsClientProps) {
           <div className="mt-6 flex flex-col items-center gap-6 sm:flex-row sm:items-start">
             <div className="relative flex-none overflow-hidden rounded-xl border-2 border-brand-gold/30 bg-white p-3 shadow-md">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={qrCodeUrl}
-                alt="Current QR Code"
-                className="h-44 w-44 object-contain"
-                onError={(e) => {
-                  const target = e.currentTarget;
-                  if (target.src !== "/images/payment-qr.jpeg") {
-                    target.src = "/images/payment-qr.jpeg";
-                  }
-                }}
-              />
+              {qrCodeUrl ? (
+                <img
+                  src={qrCodeUrl}
+                  alt="Current QR Code"
+                  className="h-44 w-44 object-contain"
+                />
+              ) : (
+                <div className="flex h-44 w-44 items-center justify-center bg-brand-primary/5 text-xs text-brand-text/40">
+                  No QR Code
+                </div>
+              )}
               <div className="mt-2 text-center">
                 <span className="font-mono text-[10px] uppercase text-brand-text/50">
                   Active QR Scanner
