@@ -88,6 +88,16 @@ export function clearLocalCart() {
   }
 }
 
+export function pruneLocalCart(activeIds: string[]) {
+  const activeSet = new Set(activeIds);
+  const current = localCartItems.get();
+  const next = current.filter((item) => activeSet.has(item.productId));
+  if (next.length !== current.length) {
+    localCartItems.set(next);
+    writeStorage(next);
+  }
+}
+
 export function useLocalCartCount() {
   return useStore(localCartCount);
 }

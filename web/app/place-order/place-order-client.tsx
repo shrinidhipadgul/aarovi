@@ -165,7 +165,7 @@ export default function PlaceOrderPage() {
     navigator.clipboard.writeText(paymentSettings.upiId);
     setCopiedUpi(true);
     setTimeout(() => setCopiedUpi(false), 2000);
-  }, [paymentSettings?.upiId]);
+  }, [paymentSettings]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

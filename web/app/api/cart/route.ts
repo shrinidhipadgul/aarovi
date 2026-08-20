@@ -9,7 +9,10 @@ export const GET = requireAuth(
     const session = (await getSession())!;
 
   const items = await prisma.cartItem.findMany({
-    where: { userId: session.user.id },
+    where: {
+      userId: session.user.id,
+      product: { deletedAt: null },
+    },
     select: {
       id: true,
       productId: true,
